@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilot Solid Waste Utilization Plant - Daily Logbook</title>
+    <title>Digital Solid Waste Production Tracker</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -29,12 +31,17 @@
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             body { background: white; color: black; }
-            .shadow-md, .shadow-lg { box-shadow: none !important; }
+            .shadow-md, .shadow-lg, .shadow-sm { box-shadow: none !important; }
             .border { border-color: #000 !important; }
+        }
+        .tab-btn.active {
+            border-bottom: 2px solid #16a34a;
+            color: #15803d;
+            font-weight: 600;
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen pb-12">
 
     <!-- Header -->
     <header class="bg-brand-900 text-white shadow-lg no-print">
@@ -43,16 +50,21 @@
                 <div>
                     <span class="text-xs font-semibold tracking-widest text-brand-100 uppercase block">Manufacturing Industry Development Institute</span>
                     <span class="text-xs font-medium text-slate-300 block">Leather & Leather Products Industry Research & Development Center</span>
-                    <h1 class="text-2xl font-bold tracking-tight text-white mt-1">Pilot Solid Waste Utilization Plant — Logbook</h1>
+                    <h1 class="text-2xl font-bold tracking-tight text-white mt-1">Pilot Solid Waste Utilization Plant — Digital Logbook</h1>
                 </div>
-                <div class="mt-4 md:mt-0 flex gap-2">
+                <div class="mt-4 md:mt-0 flex flex-wrap gap-2">
+                    <label class="bg-brand-700 hover:bg-brand-600 text-white px-3 py-2 rounded-md text-sm font-medium transition cursor-pointer flex items-center gap-1 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Import CSV
+                        <input type="file" id="csv-file-input" accept=".csv" class="hidden" onchange="importCSV(event)">
+                    </label>
                     <button onclick="exportCSV()" class="bg-brand-700 hover:bg-brand-600 text-white px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-1 shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         Export CSV
                     </button>
                     <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-1 shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                        Print / PDF
+                        Print Report
                     </button>
                     <button onclick="clearAllData()" class="bg-red-800 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-1 shadow-sm">
                         Clear Data
@@ -62,60 +74,186 @@
         </div>
     </header>
 
-    <!-- Print Header (Visible only when printing) -->
-    <div class="hidden print-only p-8 text-center border-b-2 border-black mb-6">
+    <!-- Navigation Tabs (No-Print) -->
+    <div class="bg-white border-b border-slate-200 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8">
+            <button onclick="switchTab('logbook')" id="tab-logbook" class="tab-btn active py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700">
+                Logbook & Entry
+            </button>
+            <button onclick="switchTab('analytics')" id="tab-analytics" class="tab-btn py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700">
+                Analytics Dashboard
+            </button>
+            <button onclick="switchTab('incidents')" id="tab-incidents" class="tab-btn py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700">
+                Incident & Maintenance Log
+            </button>
+        </div>
+    </div>
+
+    <!-- Printable Header (Visible only when printing) -->
+    <div class="hidden print-only p-4 text-center border-b-2 border-black mb-4">
         <h2 class="text-xl font-bold uppercase">Manufacturing Industry Development Institute</h2>
         <h3 class="text-md font-semibold">Leather and Leather Products Industry Research and Development Center</h3>
         <h4 class="text-sm font-medium">Pilot Solid Waste Utilization Plant — Daily Activity & Production Logbook</h4>
-        <p class="text-xs mt-2 text-gray-600" id="print-date-range">Generated Report</p>
+        <p class="text-xs mt-1 text-gray-600" id="print-date-range">Daily Summary & Verification Report</p>
     </div>
 
     <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
 
-        <!-- KPI Metrics Dashboard -->
-        <section class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 no-print">
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
-                <dt class="text-sm font-medium text-slate-500 truncate">Total Batches Processed</dt>
-                <dd class="mt-1 text-3xl font-semibold text-slate-900" id="kpi-batches">0</dd>
-            </div>
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
-                <dt class="text-sm font-medium text-slate-500 truncate">Total Input Weight</dt>
-                <dd class="mt-1 text-3xl font-semibold text-slate-900" id="kpi-input">0 <span class="text-sm font-normal text-slate-500">kg</span></dd>
-            </div>
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
-                <dt class="text-sm font-medium text-slate-500 truncate">Avg Production Yield</dt>
-                <dd class="mt-1 text-3xl font-semibold text-brand-700" id="kpi-yield">0%</dd>
-            </div>
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
-                <dt class="text-sm font-medium text-slate-500 truncate">Flagged Remarks / Issues</dt>
-                <dd class="mt-1 text-3xl font-semibold text-amber-600" id="kpi-flags">0</dd>
-            </div>
-        </section>
+        <!-- TAB 1: LOGBOOK & ENTRY FORM -->
+        <div id="view-logbook" class="space-y-6">
+            <!-- Summary KPIs -->
+            <section class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 no-print">
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
+                    <dt class="text-sm font-medium text-slate-500 truncate">Total Input Weight</dt>
+                    <dd class="mt-1 text-3xl font-semibold text-slate-900" id="kpi-input">0 <span class="text-sm font-normal text-slate-500">kg</span></dd>
+                </div>
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
+                    <dt class="text-sm font-medium text-slate-500 truncate">Total Output Weight</dt>
+                    <dd class="mt-1 text-3xl font-semibold text-slate-900" id="kpi-output">0 <span class="text-sm font-normal text-slate-500">kg</span></dd>
+                </div>
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
+                    <dt class="text-sm font-medium text-slate-500 truncate">Process Yield %</dt>
+                    <dd class="mt-1 text-3xl font-semibold text-brand-700" id="kpi-yield">0%</dd>
+                </div>
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
+                    <dt class="text-sm font-medium text-slate-500 truncate">Flagged Incidents</dt>
+                    <dd class="mt-1 text-3xl font-semibold text-amber-600" id="kpi-flags">0</dd>
+                </div>
+            </section>
 
-        <!-- Entry Form Section -->
-        <section class="bg-white shadow-sm rounded-lg border border-slate-200 p-6 no-print">
-            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
-                <h2 class="text-lg font-bold text-slate-900" id="form-title">New Log Entry</h2>
-                <button id="cancel-edit-btn" onclick="resetForm()" class="hidden text-sm text-slate-500 hover:text-slate-800 underline">Cancel Edit</button>
-            </div>
-            
-            <form id="log-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
-                <input type="hidden" id="entry-id">
+            <!-- Entry Form Section -->
+            <section class="bg-white shadow-sm rounded-lg border border-slate-200 p-6 no-print">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+                    <h2 class="text-lg font-bold text-slate-900" id="form-title">New Log Entry</h2>
+                    <button id="cancel-edit-btn" onclick="resetForm()" class="hidden text-sm text-slate-500 hover:text-slate-800 underline">Cancel Edit</button>
+                </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Date *</label>
-                        <input type="date" id="entry-date" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                <form id="log-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="entry-id">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Date *</label>
+                            <input type="date" id="entry-date" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Activity / Process *</label>
+                            <select id="entry-activity" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                                <option value="">Select Activity...</option>
+                                <option value="Raw material receiving and weighing">Raw material receiving and weighing</option>
+                                <option value="Sorting and preparation">Sorting and preparation</option>
+                                <option value="Size reduction or grinding">Size reduction or grinding</option>
+                                <option value="Mixing or formulation">Mixing or formulation</option>
+                                <option value="Enzymatic or chemical treatment">Enzymatic or chemical treatment</option>
+                                <option value="Hydrolysis">Hydrolysis</option>
+                                <option value="Heating or reaction">Heating or reaction</option>
+                                <option value="Precipitation">Precipitation</option>
+                                <option value="Evaporation">Evaporation</option>
+                                <option value="Drying or concentration">Drying or concentration</option>
+                                <option value="Final product collection">Final product collection</option>
+                                <option value="Cleaning and washing">Cleaning and washing</option>
+                                <option value="Maintenance or repair">Maintenance or repair</option>
+                                <option value="Sampling and laboratory testing">Sampling and laboratory testing</option>
+                                <option value="Equipment inspection">Equipment inspection</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Operator Name *</label>
+                            <input type="text" id="entry-operator" placeholder="e.g. John Doe" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-3 rounded-md border border-slate-100">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Raw Material Input</label>
+                            <input type="text" id="entry-raw-material" placeholder="e.g. Chrome shavings, Trimmings" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Input Qty</label>
+                            <input type="number" step="0.01" min="0" id="entry-input-qty" oninput="calculateYield()" placeholder="0.00" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Input Unit</label>
+                            <select id="entry-input-unit" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                                <option value="kg">kg</option>
+                                <option value="L">L</option>
+                                <option value="g">g</option>
+                                <option value="tons">tons</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-3 rounded-md border border-slate-100">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Final Output / Product</label>
+                            <input type="text" id="entry-output-product" placeholder="e.g. Gelatin, Protein Hydrolysate" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Output Qty</label>
+                            <input type="number" step="0.01" min="0" id="entry-output-qty" oninput="calculateYield()" placeholder="0.00" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Output Unit</label>
+                            <select id="entry-output-unit" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                                <option value="kg">kg</option>
+                                <option value="L">L</option>
+                                <option value="g">g</option>
+                                <option value="tons">tons</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Start Time</label>
+                            <input type="time" id="entry-start-time" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">End Time</label>
+                            <input type="time" id="entry-end-time" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                        </div>
+                        <div class="bg-brand-50 border border-brand-100 rounded-md p-2 text-center">
+                            <span class="block text-xs font-bold text-brand-800 uppercase">Calculated Yield</span>
+                            <span id="calculated-yield-display" class="text-xl font-black text-brand-700">0.00%</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="md:col-span-3">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Remarks / Abnormalities</label>
+                            <input type="text" id="entry-remarks" placeholder="Notes, equipment failures, process variances..." class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                        </div>
+                        <div class="flex items-end">
+                            <label class="inline-flex items-center cursor-pointer mb-2">
+                                <input type="checkbox" id="entry-flagged" class="rounded border-slate-300 text-amber-600 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50 h-5 w-5">
+                                <span class="ml-2 text-xs font-semibold text-amber-800 uppercase">Flag Incident</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" id="submit-btn" class="bg-brand-700 hover:bg-brand-800 text-white font-medium px-6 py-2 rounded-md shadow-sm transition text-sm">Save Log Entry</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Search & Filter Controls -->
+            <section class="bg-white shadow-sm rounded-lg border border-slate-200 p-4 no-print space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Search Keywords</label>
+                        <input type="text" id="filter-search" oninput="renderData()" placeholder="Search by material, product, remarks, operator..." class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Activity / Process *[cite: 1]</label>
-                        <select id="entry-activity" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
-                            <option value="">Select Activity...</option>
-                            <option value="Raw material receiving and weighing">Raw material receiving and weighing</option>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Filter Activity</label>
+                        <select id="filter-activity" onchange="renderData()" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
+                            <option value="">All Activities</option>
+                            <option value="Raw material receiving and weighing">Raw material receiving/weighing</option>
                             <option value="Sorting and preparation">Sorting and preparation</option>
-                            <option value="Size reduction or grinding">Size reduction or grinding</option>
+                            <option value="Size reduction or grinding">Size reduction/grinding</option>
                             <option value="Mixing or formulation">Mixing or formulation</option>
-                            <option value="Enzymatic or chemical treatment">Enzymatic or chemical treatment</option>
+                            <option value="Enzymatic or chemical treatment">Enzymatic/chemical treatment</option>
                             <option value="Hydrolysis">Hydrolysis</option>
                             <option value="Heating or reaction">Heating or reaction</option>
                             <option value="Precipitation">Precipitation</option>
@@ -124,170 +262,148 @@
                             <option value="Final product collection">Final product collection</option>
                             <option value="Cleaning and washing">Cleaning and washing</option>
                             <option value="Maintenance or repair">Maintenance or repair</option>
-                            <option value="Sampling and laboratory testing">Sampling and laboratory testing</option>
+                            <option value="Sampling and laboratory testing">Sampling/lab testing</option>
                             <option value="Equipment inspection">Equipment inspection</option>
                             <option value="Others">Others</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Operator Name *[cite: 1]</label>
-                        <input type="text" id="entry-operator" placeholder="e.g. John Doe" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-3 rounded-md border border-slate-100">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Raw Material Input[cite: 1]</label>
-                        <input type="text" id="entry-raw-material" placeholder="e.g. Chrome shavings, Trimmings" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Filter Operator</label>
+                        <input type="text" id="filter-operator" oninput="renderData()" placeholder="Operator name" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Input Qty[cite: 1]</label>
-                        <input type="number" step="0.01" min="0" id="entry-input-qty" oninput="calculateYield()" placeholder="0.00" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Input Unit[cite: 1]</label>
-                        <select id="entry-input-unit" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
-                            <option value="kg">kg</option>
-                            <option value="L">L</option>
-                            <option value="g">g</option>
-                            <option value="tons">tons</option>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Issues Only</label>
+                        <select id="filter-flagged" onchange="renderData()" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
+                            <option value="">All Entries</option>
+                            <option value="flagged">Flagged Issues Only</option>
                         </select>
                     </div>
                 </div>
+            </section>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-3 rounded-md border border-slate-100">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Final Output / Product[cite: 1]</label>
-                        <input type="text" id="entry-output-product" placeholder="e.g. Gelatin, Protein Hydrolysate" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Output Qty[cite: 1]</label>
-                        <input type="number" step="0.01" min="0" id="entry-output-qty" oninput="calculateYield()" placeholder="0.00" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Output Unit[cite: 1]</label>
-                        <select id="entry-output-unit" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
-                            <option value="kg">kg</option>
-                            <option value="L">L</option>
-                            <option value="g">g</option>
-                            <option value="tons">tons</option>
-                        </select>
+            <!-- Logbook Data Table -->
+            <section class="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 uppercase font-semibold">
+                                <th class="p-2 border-r">No.</th>
+                                <th class="p-2 border-r">Date</th>
+                                <th class="p-2 border-r">Activity / Process</th>
+                                <th class="p-2 border-r">Raw Material</th>
+                                <th class="p-2 border-r">Input Qty</th>
+                                <th class="p-2 border-r">Time</th>
+                                <th class="p-2 border-r">Output Product</th>
+                                <th class="p-2 border-r">Output Qty</th>
+                                <th class="p-2 border-r">Yield</th>
+                                <th class="p-2 border-r">Operated By</th>
+                                <th class="p-2 border-r">Remarks</th>
+                                <th class="p-2 text-center no-print">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-table-body" class="divide-y divide-slate-200">
+                            <!-- Dynamic JS Injection -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 2: ANALYTICS DASHBOARD -->
+        <div id="view-analytics" class="space-y-6 hidden no-print">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Line Chart: Input vs Output over time -->
+                <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                    <h3 class="text-md font-bold text-slate-800 mb-4">Daily Input vs Output Quantities</h3>
+                    <div class="relative h-72">
+                        <canvas id="line-chart"></canvas>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Start Time[cite: 1]</label>
-                        <input type="time" id="entry-start-time" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">End Time[cite: 1]</label>
-                        <input type="time" id="entry-end-time" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
-                    </div>
-                    <div class="bg-brand-50 border border-brand-100 rounded-md p-2 text-center">
-                        <span class="block text-xs font-bold text-brand-800 uppercase">Calculated Yield</span>
-                        <span id="calculated-yield-display" class="text-xl font-black text-brand-700">0.00%</span>
+                <!-- Bar Chart: Activity Type Distribution -->
+                <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                    <h3 class="text-md font-bold text-slate-800 mb-4">Activity Type Distribution</h3>
+                    <div class="relative h-72">
+                        <canvas id="bar-chart"></canvas>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="md:col-span-3">
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Remarks / Abnormalities[cite: 1]</label>
-                        <input type="text" id="entry-remarks" placeholder="Notes, equipment failures, process variances..." class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
-                    </div>
-                    <div class="flex items-end">
-                        <label class="inline-flex items-center cursor-pointer mb-2">
-                            <input type="checkbox" id="entry-flagged" class="rounded border-slate-300 text-amber-600 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50 h-5 w-5">
-                            <span class="ml-2 text-xs font-semibold text-amber-800 uppercase">Flag as Issue</span>
-                        </label>
-                    </div>
+        <!-- TAB 3: INCIDENT & MAINTENANCE LOG -->
+        <div id="view-incidents" class="space-y-6 hidden no-print">
+            <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                <div class="border-b border-slate-200 pb-3 mb-4">
+                    <h3 class="text-lg font-bold text-slate-900">Equipment Failures & Process Abnormalities</h3>
+                    <p class="text-xs text-slate-500">Isolated entries containing flagged remarks or maintenance records for problem tracing.</p>
                 </div>
-
-                <div class="flex justify-end pt-2">
-                    <button type="submit" id="submit-btn" class="bg-brand-700 hover:bg-brand-800 text-white font-medium px-6 py-2 rounded-md shadow-sm transition text-sm">Save Log Entry</button>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-amber-50 border-b border-amber-200 text-amber-900 uppercase font-semibold">
+                                <th class="p-2 border-r">Date</th>
+                                <th class="p-2 border-r">Activity / Process</th>
+                                <th class="p-2 border-r">Operated By</th>
+                                <th class="p-2 border-r">Flagged Remarks / Abnormality</th>
+                                <th class="p-2 border-r">Input / Output Context</th>
+                            </tr>
+                        </thead>
+                        <tbody id="incident-table-body" class="divide-y divide-slate-200">
+                            <!-- Dynamic JS Injection -->
+                        </tbody>
+                    </table>
                 </div>
-            </form>
-        </section>
+            </div>
+        </div>
 
-        <!-- Search & Filter Controls -->
-        <section class="bg-white shadow-sm rounded-lg border border-slate-200 p-4 no-print space-y-3">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-medium text-slate-500 mb-1">Search Keywords</label>
-                    <input type="text" id="filter-search" oninput="renderData()" placeholder="Search by material, product, remarks, operator..." class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
+        <!-- Printable Verification Sign-Off Blocks (Visible only when printing) -->
+        <section class="hidden print-only pt-12 mt-12 border-t border-black">
+            <div class="grid grid-cols-2 gap-12 text-xs">
+                <div>
+                    <p class="font-bold text-slate-800">Prepared By (Operator):</p>
+                    <div class="mt-8 border-b border-black w-3/4"></div>
+                    <p class="mt-1">Name & Signature</p>
+                    <p class="mt-1">Date: ____________________</p>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">Filter Activity[cite: 1]</label>
-                    <select id="filter-activity" onchange="renderData()" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
-                        <option value="">All Activities</option>
-                        <option value="Raw material receiving and weighing">Raw material receiving/weighing</option>
-                        <option value="Sorting and preparation">Sorting and preparation</option>
-                        <option value="Size reduction or grinding">Size reduction/grinding</option>
-                        <option value="Mixing or formulation">Mixing or formulation</option>
-                        <option value="Enzymatic or chemical treatment">Enzymatic/chemical treatment</option>
-                        <option value="Hydrolysis">Hydrolysis</option>
-                        <option value="Heating or reaction">Heating or reaction</option>
-                        <option value="Precipitation">Precipitation</option>
-                        <option value="Evaporation">Evaporation</option>
-                        <option value="Drying or concentration">Drying or concentration</option>
-                        <option value="Final product collection">Final product collection</option>
-                        <option value="Cleaning and washing">Cleaning and washing</option>
-                        <option value="Maintenance or repair">Maintenance or repair</option>
-                        <option value="Sampling and laboratory testing">Sampling/lab testing</option>
-                        <option value="Equipment inspection">Equipment inspection</option>
-                        <option value="Others">Others</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">Filter Operator[cite: 1]</label>
-                    <input type="text" id="filter-operator" oninput="renderData()" placeholder="Operator name" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 mb-1">Issues Only</label>
-                    <select id="filter-flagged" onchange="renderData()" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
-                        <option value="">All Entries</option>
-                        <option value="flagged">Flagged Issues Only</option>
-                    </select>
+                    <p class="font-bold text-slate-800">Verified By (Plant Supervisor / Quality Lead):</p>
+                    <div class="mt-8 border-b border-black w-3/4"></div>
+                    <p class="mt-1">Name & Signature</p>
+                    <p class="mt-1">Date: ____________________</p>
                 </div>
             </div>
         </section>
 
-        <!-- Logbook Data Table -->
-        <section class="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 uppercase font-semibold">
-                            <th class="p-2 border-r">No.[cite: 1]</th>
-                            <th class="p-2 border-r">Date[cite: 1]</th>
-                            <th class="p-2 border-r">Activity / Process[cite: 1]</th>
-                            <th class="p-2 border-r">Raw Material[cite: 1]</th>
-                            <th class="p-2 border-r">Input Qty[cite: 1]</th>
-                            <th class="p-2 border-r">Time[cite: 1]</th>
-                            <th class="p-2 border-r">Output Product[cite: 1]</th>
-                            <th class="p-2 border-r">Output Qty[cite: 1]</th>
-                            <th class="p-2 border-r">Yield</th>
-                            <th class="p-2 border-r">Operated By[cite: 1]</th>
-                            <th class="p-2 border-r">Remarks[cite: 1]</th>
-                            <th class="p-2 text-center no-print">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="log-table-body" class="divide-y divide-slate-200">
-                        <!-- Dynamic JS Injection -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
     </main>
 
-    <!-- JavaScript Application Logic -->
+    <!-- JavaScript Logic -->
     <script>
         const STORAGE_KEY = 'pilot_plant_logbook_data';
         let logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        
+        let lineChartInstance = null;
+        let barChartInstance = null;
 
         // Set default date to today
-        document.getElementById('entry-date').valueToDate = new Date();
         document.getElementById('entry-date').value = new Date().toISOString().split('T')[0];
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            document.getElementById('view-logbook').classList.add('hidden');
+            document.getElementById('view-analytics').classList.add('hidden');
+            document.getElementById('view-incidents').classList.add('hidden');
+
+            if (tabName === 'logbook') {
+                document.getElementById('view-logbook').classList.remove('hidden');
+            } else if (tabName === 'analytics') {
+                document.getElementById('view-analytics').classList.remove('hidden');
+                renderCharts();
+            } else if (tabName === 'incidents') {
+                document.getElementById('view-incidents').classList.remove('hidden');
+                renderIncidents();
+            }
+        }
 
         function calculateYield() {
             const inputQty = parseFloat(document.getElementById('entry-input-qty').value) || 0;
@@ -305,7 +421,10 @@
         function handleFormSubmit(e) {
             e.preventDefault();
             const id = document.getElementById('entry-id').value;
-            
+            const remarksText = document.getElementById('entry-remarks').value;
+            const isFlagged = document.getElementById('entry-flagged').checked || 
+                              /fail|break|error|leak|issue|abnormal|maintenance|repair|stop/i.test(remarksText);
+
             const entryData = {
                 id: id ? parseInt(id) : Date.now(),
                 date: document.getElementById('entry-date').value,
@@ -319,8 +438,8 @@
                 outputUnit: document.getElementById('entry-output-unit').value,
                 startTime: document.getElementById('entry-start-time').value,
                 endTime: document.getElementById('entry-end-time').value,
-                remarks: document.getElementById('entry-remarks').value,
-                flagged: document.getElementById('entry-flagged').checked || document.getElementById('entry-remarks').value.length > 0 && document.getElementById('entry-flagged').checked
+                remarks: remarksText,
+                flagged: isFlagged
             };
 
             if (id) {
@@ -357,6 +476,7 @@
             document.getElementById('form-title').textContent = "Edit Log Entry #" + id;
             document.getElementById('submit-btn').textContent = "Update Entry";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            switchTab('logbook');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -399,14 +519,15 @@
                 return matchesSearch && matchesAct && matchesOp && matchesFlag;
             });
 
-            // Update KPIs
             let totalInput = 0;
+            let totalOutput = 0;
             let totalYieldSum = 0;
             let yieldCount = 0;
             let flaggedCount = 0;
 
             filtered.forEach((item, index) => {
                 totalInput += item.inputQty || 0;
+                totalOutput += item.outputQty || 0;
                 if (item.inputQty > 0) {
                     totalYieldSum += (item.outputQty / item.inputQty) * 100;
                     yieldCount++;
@@ -437,10 +558,87 @@
                 tbody.appendChild(row);
             });
 
-            document.getElementById('kpi-batches').textContent = filtered.length;
             document.getElementById('kpi-input').innerHTML = `${totalInput.toFixed(1)} <span class="text-sm font-normal text-slate-500">kg</span>`;
+            document.getElementById('kpi-output').innerHTML = `${totalOutput.toFixed(1)} <span class="text-sm font-normal text-slate-500">kg</span>`;
             document.getElementById('kpi-yield').textContent = yieldCount > 0 ? (totalYieldSum / yieldCount).toFixed(1) + '%' : '0%';
             document.getElementById('kpi-flags').textContent = flaggedCount;
+        }
+
+        function renderIncidents() {
+            const tbody = document.getElementById('incident-table-body');
+            tbody.innerHTML = '';
+
+            const incidents = logs.filter(l => l.flagged || (l.remarks && l.remarks.trim().length > 0));
+
+            if (incidents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No equipment failures or process abnormalities recorded.</td></tr>`;
+                return;
+            }
+
+            incidents.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-slate-50';
+                row.innerHTML = `
+                    <td class="p-2 border-r whitespace-nowrap font-medium">${item.date}</td>
+                    <td class="p-2 border-r">${item.activity}</td>
+                    <td class="p-2 border-r">${item.operator}</td>
+                    <td class="p-2 border-r text-amber-900 font-medium">${item.remarks || 'Flagged without specific remarks'}</td>
+                    <td class="p-2 text-slate-500">In: ${item.inputQty}${item.inputUnit} | Out: ${item.outputQty}${item.outputUnit}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderCharts() {
+            // Aggregate Input vs Output by Date
+            const dateMap = {};
+            // Aggregate Activity counts
+            const activityMap = {};
+
+            logs.forEach(l => {
+                if (!dateMap[l.date]) {
+                    dateMap[l.date] = { input: 0, output: 0 };
+                }
+                dateMap[l.date].input += l.inputQty || 0;
+                dateMap[l.date].output += l.outputQty || 0;
+
+                activityMap[l.activity] = (activityMap[l.activity] || 0) + 1;
+            });
+
+            const dates = Object.keys(dateMap).sort();
+            const inputs = dates.map(d => dateMap[d].input);
+            const outputs = dates.map(d => dateMap[d].output);
+
+            // Render Line Chart
+            const ctxLine = document.getElementById('line-chart').getContext('2d');
+            if (lineChartInstance) lineChartInstance.destroy();
+            lineChartInstance = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        { label: 'Input Qty (kg)', data: inputs, borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.1)', fill: true, tension: 0.2 },
+                        { label: 'Output Qty (kg)', data: outputs, borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.1)', fill: true, tension: 0.2 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Render Bar Chart
+            const ctxBar = document.getElementById('bar-chart').getContext('2d');
+            if (barChartInstance) barChartInstance.destroy();
+            barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(activityMap),
+                    datasets: [{
+                        label: 'Occurrences',
+                        data: Object.values(activityMap),
+                        backgroundColor: '#15803d'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
         }
 
         function exportCSV() {
@@ -478,26 +676,53 @@
             document.body.removeChild(link);
         }
 
-       const ADMIN_PASSWORD = "YourSecretPassword123"; // Change this to your preferred admin password
+        function importCSV(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-function clearAllData() {
-    const userPassword = prompt("Admin Access Required:\nPlease enter the admin password to clear all logged data:");
-    
-    // Check if the user entered the correct password
-    if (userPassword === null) {
-        return; // User cancelled
-    }
-    
-    if (userPassword === ADMIN_PASSWORD) {
-        if (confirm("Password confirmed. Are you sure you want to clear ALL logged data? This action cannot be undone.")) {
-            logs = [];
-            saveAndRender();
-            alert("All log data has been successfully cleared.");
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const text = evt.target.result;
+                const lines = text.split("\n").filter(l => l.trim().length > 0);
+                if (lines.length < 2) return;
+
+                const parsedLogs = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = lines[i].split(",").map(c => c.trim().replace(/^"(.*)"$/, '$1'));
+                    if (cols.length >= 13) {
+                        parsedLogs.push({
+                            id: Date.now() + i,
+                            date: cols[1] || new Date().toISOString().split('T')[0],
+                            activity: cols[2] || '',
+                            rawMaterial: cols[3] || '',
+                            inputQty: parseFloat(cols[4]) || 0,
+                            inputUnit: cols[5] || 'kg',
+                            startTime: cols[6] || '',
+                            endTime: cols[7] || '',
+                            outputProduct: cols[8] || '',
+                            outputQty: parseFloat(cols[9]) || 0,
+                            outputUnit: cols[10] || 'kg',
+                            operator: cols[12] || 'Imported',
+                            remarks: cols[13] || '',
+                            flagged: cols[14] ? cols[14].toLowerCase() === 'yes' : false
+                        });
+                    }
+                }
+
+                if (parsedLogs.length > 0) {
+                    logs = logs.concat(parsedLogs);
+                    saveAndRender();
+                    alert(`Successfully imported ${parsedLogs.length} entries.`);
+                }
+            };
+            reader.readAsText(file);
         }
-    } else {
-        alert("Access Denied: Incorrect admin password.");
-    }
-}
+
+        function clearAllData() {
+            if (confirm("Are you sure you want to clear ALL logged data? This action cannot be undone.")) {
+                logs = [];
+                saveAndRender();
+            }
         }
 
         // Initialize UI render
