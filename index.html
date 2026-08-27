@@ -718,11 +718,26 @@
             reader.readAsText(file);
         }
 
-        function clearAllData() {
-            if (confirm("Are you sure you want to clear ALL logged data? This action cannot be undone.")) {
-                logs = [];
-                saveAndRender();
-            }
+        function clearAllData() const ADMIN_PASSWORD = "YourSecretPassword123@LLPI"; // Change this to your preferred admin password
+
+function clearAllData() {
+    const userPassword = prompt("Admin Access Required:\nPlease enter the admin password to clear all logged data:");
+    
+    // Check if the user entered the correct password
+    if (userPassword === null) {
+        return; // User cancelled
+    }
+    
+    if (userPassword === ADMIN_PASSWORD) {
+        if (confirm("Password confirmed. Are you sure you want to clear ALL logged data? This action cannot be undone.")) {
+            logs = [];
+            saveAndRender();
+            alert("All log data has been successfully cleared.");
+        }
+    } else {
+        alert("Access Denied: Incorrect admin password.");
+    }
+}
         }
 
         // Initialize UI render
