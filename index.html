@@ -1,0 +1,36 @@
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwOfzfNmB_8zDvzBhNlH4MyM3QQvH25UxF1gMylYZ2xJhM3pQVt2NIkclYFOb8eJJCIw/exec";
+
+function handleFormSubmit(e) {
+    e.preventDefault();
+    
+    const inputQty = parseFloat(document.getElementById('entry-input-qty').value) || 0;
+    const outputQty = parseFloat(document.getElementById('entry-output-qty').value) || 0;
+    const yieldVal = inputQty > 0 ? ((outputQty / inputQty) * 100).toFixed(2) + '%' : '0.00%';
+
+    const entryData = {
+        date: document.getElementById('entry-date').value,
+        activity: document.getElementById('entry-activity').value,
+        operator: document.getElementById('entry-operator').value,
+        rawMaterial: document.getElementById('entry-raw-material').value,
+        inputQty: inputQty,
+        inputUnit: document.getElementById('entry-input-unit').value,
+        outputProduct: document.getElementById('entry-output-product').value,
+        outputQty: outputQty,
+        outputUnit: document.getElementById('entry-output-unit').value,
+        startTime: document.getElementById('entry-start-time').value,
+        endTime: document.getElementById('entry-end-time').value,
+        yieldVal: yieldVal,
+        remarks: document.getElementById('entry-remarks').value,
+        flagged: document.getElementById('entry-flagged').checked
+    };
+
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entryData)
+    }).then(() => {
+        alert("Log entry successfully saved to cloud!");
+        resetForm();
+    }).catch(err => alert("Error saving entry: " + err));
+}
