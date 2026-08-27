@@ -1,36 +1,492 @@
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwOfzfNmB_8zDvzBhNlH4MyM3QQvH25UxF1gMylYZ2xJhM3pQVt2NIkclYFOb8eJJCIw/exec";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilot Solid Waste Utilization Plant - Daily Logbook</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; }
+            .shadow-md, .shadow-lg { box-shadow: none !important; }
+            .border { border-color: #000 !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
-function handleFormSubmit(e) {
-    e.preventDefault();
-    
-    const inputQty = parseFloat(document.getElementById('entry-input-qty').value) || 0;
-    const outputQty = parseFloat(document.getElementById('entry-output-qty').value) || 0;
-    const yieldVal = inputQty > 0 ? ((outputQty / inputQty) * 100).toFixed(2) + '%' : '0.00%';
+    <!-- Header -->
+    <header class="bg-brand-900 text-white shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+            <div class="md:flex md:items-center md:justify-between">
+                <div>
+                    <span class="text-xs font-semibold tracking-widest text-brand-100 uppercase block">Manufacturing Industry Development Institute</span>
+                    <span class="text-xs font-medium text-slate-300 block">Leather & Leather Products Industry Research & Development Center</span>
+                    <h1 class="text-2xl font-bold tracking-tight text-white mt-1">Pilot Solid Waste Utilization Plant — Logbook</h1>
+                </div>
+                <div class="mt-4 md:mt-0 flex gap-2">
+                    <button onclick="exportCSV()" class="bg-brand-700 hover:bg-brand-600 text-white px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-1 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Export CSV
+                    </button>
+                    <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-1 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        Print / PDF
+                    </button>
+                    <button onclick="clearAllData()" class="bg-red-800 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-1 shadow-sm">
+                        Clear Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    const entryData = {
-        date: document.getElementById('entry-date').value,
-        activity: document.getElementById('entry-activity').value,
-        operator: document.getElementById('entry-operator').value,
-        rawMaterial: document.getElementById('entry-raw-material').value,
-        inputQty: inputQty,
-        inputUnit: document.getElementById('entry-input-unit').value,
-        outputProduct: document.getElementById('entry-output-product').value,
-        outputQty: outputQty,
-        outputUnit: document.getElementById('entry-output-unit').value,
-        startTime: document.getElementById('entry-start-time').value,
-        endTime: document.getElementById('entry-end-time').value,
-        yieldVal: yieldVal,
-        remarks: document.getElementById('entry-remarks').value,
-        flagged: document.getElementById('entry-flagged').checked
-    };
+    <!-- Print Header (Visible only when printing) -->
+    <div class="hidden print-only p-8 text-center border-b-2 border-black mb-6">
+        <h2 class="text-xl font-bold uppercase">Manufacturing Industry Development Institute</h2>
+        <h3 class="text-md font-semibold">Leather and Leather Products Industry Research and Development Center</h3>
+        <h4 class="text-sm font-medium">Pilot Solid Waste Utilization Plant — Daily Activity & Production Logbook</h4>
+        <p class="text-xs mt-2 text-gray-600" id="print-date-range">Generated Report</p>
+    </div>
 
-    fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(entryData)
-    }).then(() => {
-        alert("Log entry successfully saved to cloud!");
-        resetForm();
-    }).catch(err => alert("Error saving entry: " + err));
-}
+    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+
+        <!-- KPI Metrics Dashboard -->
+        <section class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 no-print">
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
+                <dt class="text-sm font-medium text-slate-500 truncate">Total Batches Processed</dt>
+                <dd class="mt-1 text-3xl font-semibold text-slate-900" id="kpi-batches">0</dd>
+            </div>
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
+                <dt class="text-sm font-medium text-slate-500 truncate">Total Input Weight</dt>
+                <dd class="mt-1 text-3xl font-semibold text-slate-900" id="kpi-input">0 <span class="text-sm font-normal text-slate-500">kg</span></dd>
+            </div>
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
+                <dt class="text-sm font-medium text-slate-500 truncate">Avg Production Yield</dt>
+                <dd class="mt-1 text-3xl font-semibold text-brand-700" id="kpi-yield">0%</dd>
+            </div>
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200 p-5">
+                <dt class="text-sm font-medium text-slate-500 truncate">Flagged Remarks / Issues</dt>
+                <dd class="mt-1 text-3xl font-semibold text-amber-600" id="kpi-flags">0</dd>
+            </div>
+        </section>
+
+        <!-- Entry Form Section -->
+        <section class="bg-white shadow-sm rounded-lg border border-slate-200 p-6 no-print">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+                <h2 class="text-lg font-bold text-slate-900" id="form-title">New Log Entry</h2>
+                <button id="cancel-edit-btn" onclick="resetForm()" class="hidden text-sm text-slate-500 hover:text-slate-800 underline">Cancel Edit</button>
+            </div>
+            
+            <form id="log-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="entry-id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Date *</label>
+                        <input type="date" id="entry-date" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Activity / Process *[cite: 1]</label>
+                        <select id="entry-activity" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                            <option value="">Select Activity...</option>
+                            <option value="Raw material receiving and weighing">Raw material receiving and weighing</option>
+                            <option value="Sorting and preparation">Sorting and preparation</option>
+                            <option value="Size reduction or grinding">Size reduction or grinding</option>
+                            <option value="Mixing or formulation">Mixing or formulation</option>
+                            <option value="Enzymatic or chemical treatment">Enzymatic or chemical treatment</option>
+                            <option value="Hydrolysis">Hydrolysis</option>
+                            <option value="Heating or reaction">Heating or reaction</option>
+                            <option value="Precipitation">Precipitation</option>
+                            <option value="Evaporation">Evaporation</option>
+                            <option value="Drying or concentration">Drying or concentration</option>
+                            <option value="Final product collection">Final product collection</option>
+                            <option value="Cleaning and washing">Cleaning and washing</option>
+                            <option value="Maintenance or repair">Maintenance or repair</option>
+                            <option value="Sampling and laboratory testing">Sampling and laboratory testing</option>
+                            <option value="Equipment inspection">Equipment inspection</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Operator Name *[cite: 1]</label>
+                        <input type="text" id="entry-operator" placeholder="e.g. John Doe" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-3 rounded-md border border-slate-100">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Raw Material Input[cite: 1]</label>
+                        <input type="text" id="entry-raw-material" placeholder="e.g. Chrome shavings, Trimmings" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Input Qty[cite: 1]</label>
+                        <input type="number" step="0.01" min="0" id="entry-input-qty" oninput="calculateYield()" placeholder="0.00" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Input Unit[cite: 1]</label>
+                        <select id="entry-input-unit" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                            <option value="kg">kg</option>
+                            <option value="L">L</option>
+                            <option value="g">g</option>
+                            <option value="tons">tons</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-3 rounded-md border border-slate-100">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Final Output / Product[cite: 1]</label>
+                        <input type="text" id="entry-output-product" placeholder="e.g. Gelatin, Protein Hydrolysate" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Output Qty[cite: 1]</label>
+                        <input type="number" step="0.01" min="0" id="entry-output-qty" oninput="calculateYield()" placeholder="0.00" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Output Unit[cite: 1]</label>
+                        <select id="entry-output-unit" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                            <option value="kg">kg</option>
+                            <option value="L">L</option>
+                            <option value="g">g</option>
+                            <option value="tons">tons</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Start Time[cite: 1]</label>
+                        <input type="time" id="entry-start-time" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">End Time[cite: 1]</label>
+                        <input type="time" id="entry-end-time" class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                    </div>
+                    <div class="bg-brand-50 border border-brand-100 rounded-md p-2 text-center">
+                        <span class="block text-xs font-bold text-brand-800 uppercase">Calculated Yield</span>
+                        <span id="calculated-yield-display" class="text-xl font-black text-brand-700">0.00%</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Remarks / Abnormalities[cite: 1]</label>
+                        <input type="text" id="entry-remarks" placeholder="Notes, equipment failures, process variances..." class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600 focus:border-brand-600">
+                    </div>
+                    <div class="flex items-end">
+                        <label class="inline-flex items-center cursor-pointer mb-2">
+                            <input type="checkbox" id="entry-flagged" class="rounded border-slate-300 text-amber-600 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50 h-5 w-5">
+                            <span class="ml-2 text-xs font-semibold text-amber-800 uppercase">Flag as Issue</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-2">
+                    <button type="submit" id="submit-btn" class="bg-brand-700 hover:bg-brand-800 text-white font-medium px-6 py-2 rounded-md shadow-sm transition text-sm">Save Log Entry</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Search & Filter Controls -->
+        <section class="bg-white shadow-sm rounded-lg border border-slate-200 p-4 no-print space-y-3">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Search Keywords</label>
+                    <input type="text" id="filter-search" oninput="renderData()" placeholder="Search by material, product, remarks, operator..." class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Filter Activity[cite: 1]</label>
+                    <select id="filter-activity" onchange="renderData()" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
+                        <option value="">All Activities</option>
+                        <option value="Raw material receiving and weighing">Raw material receiving/weighing</option>
+                        <option value="Sorting and preparation">Sorting and preparation</option>
+                        <option value="Size reduction or grinding">Size reduction/grinding</option>
+                        <option value="Mixing or formulation">Mixing or formulation</option>
+                        <option value="Enzymatic or chemical treatment">Enzymatic/chemical treatment</option>
+                        <option value="Hydrolysis">Hydrolysis</option>
+                        <option value="Heating or reaction">Heating or reaction</option>
+                        <option value="Precipitation">Precipitation</option>
+                        <option value="Evaporation">Evaporation</option>
+                        <option value="Drying or concentration">Drying or concentration</option>
+                        <option value="Final product collection">Final product collection</option>
+                        <option value="Cleaning and washing">Cleaning and washing</option>
+                        <option value="Maintenance or repair">Maintenance or repair</option>
+                        <option value="Sampling and laboratory testing">Sampling/lab testing</option>
+                        <option value="Equipment inspection">Equipment inspection</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Filter Operator[cite: 1]</label>
+                    <input type="text" id="filter-operator" oninput="renderData()" placeholder="Operator name" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Issues Only</label>
+                    <select id="filter-flagged" onchange="renderData()" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
+                        <option value="">All Entries</option>
+                        <option value="flagged">Flagged Issues Only</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Logbook Data Table -->
+        <section class="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 uppercase font-semibold">
+                            <th class="p-2 border-r">No.[cite: 1]</th>
+                            <th class="p-2 border-r">Date[cite: 1]</th>
+                            <th class="p-2 border-r">Activity / Process[cite: 1]</th>
+                            <th class="p-2 border-r">Raw Material[cite: 1]</th>
+                            <th class="p-2 border-r">Input Qty[cite: 1]</th>
+                            <th class="p-2 border-r">Time[cite: 1]</th>
+                            <th class="p-2 border-r">Output Product[cite: 1]</th>
+                            <th class="p-2 border-r">Output Qty[cite: 1]</th>
+                            <th class="p-2 border-r">Yield</th>
+                            <th class="p-2 border-r">Operated By[cite: 1]</th>
+                            <th class="p-2 border-r">Remarks[cite: 1]</th>
+                            <th class="p-2 text-center no-print">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-table-body" class="divide-y divide-slate-200">
+                        <!-- Dynamic JS Injection -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        const STORAGE_KEY = 'pilot_plant_logbook_data';
+        let logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        // Set default date to today
+        document.getElementById('entry-date').valueToDate = new Date();
+        document.getElementById('entry-date').value = new Date().toISOString().split('T')[0];
+
+        function calculateYield() {
+            const inputQty = parseFloat(document.getElementById('entry-input-qty').value) || 0;
+            const outputQty = parseFloat(document.getElementById('entry-output-qty').value) || 0;
+            const display = document.getElementById('calculated-yield-display');
+
+            if (inputQty > 0) {
+                const yieldVal = ((outputQty / inputQty) * 100).toFixed(2);
+                display.textContent = `${yieldVal}%`;
+            } else {
+                display.textContent = '0.00%';
+            }
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('entry-id').value;
+            
+            const entryData = {
+                id: id ? parseInt(id) : Date.now(),
+                date: document.getElementById('entry-date').value,
+                activity: document.getElementById('entry-activity').value,
+                operator: document.getElementById('entry-operator').value,
+                rawMaterial: document.getElementById('entry-raw-material').value,
+                inputQty: parseFloat(document.getElementById('entry-input-qty').value) || 0,
+                inputUnit: document.getElementById('entry-input-unit').value,
+                outputProduct: document.getElementById('entry-output-product').value,
+                outputQty: parseFloat(document.getElementById('entry-output-qty').value) || 0,
+                outputUnit: document.getElementById('entry-output-unit').value,
+                startTime: document.getElementById('entry-start-time').value,
+                endTime: document.getElementById('entry-end-time').value,
+                remarks: document.getElementById('entry-remarks').value,
+                flagged: document.getElementById('entry-flagged').checked || document.getElementById('entry-remarks').value.length > 0 && document.getElementById('entry-flagged').checked
+            };
+
+            if (id) {
+                const index = logs.findIndex(l => l.id === parseInt(id));
+                if (index !== -1) logs[index] = entryData;
+            } else {
+                logs.push(entryData);
+            }
+
+            saveAndRender();
+            resetForm();
+        }
+
+        function editEntry(id) {
+            const item = logs.find(l => l.id === id);
+            if (!item) return;
+
+            document.getElementById('entry-id').value = item.id;
+            document.getElementById('entry-date').value = item.date;
+            document.getElementById('entry-activity').value = item.activity;
+            document.getElementById('entry-operator').value = item.operator;
+            document.getElementById('entry-raw-material').value = item.rawMaterial;
+            document.getElementById('entry-input-qty').value = item.inputQty;
+            document.getElementById('entry-input-unit').value = item.inputUnit;
+            document.getElementById('entry-output-product').value = item.outputProduct;
+            document.getElementById('entry-output-qty').value = item.outputQty;
+            document.getElementById('entry-output-unit').value = item.outputUnit;
+            document.getElementById('entry-start-time').value = item.startTime;
+            document.getElementById('entry-end-time').value = item.endTime;
+            document.getElementById('entry-remarks').value = item.remarks;
+            document.getElementById('entry-flagged').checked = item.flagged;
+
+            calculateYield();
+            document.getElementById('form-title').textContent = "Edit Log Entry #" + id;
+            document.getElementById('submit-btn').textContent = "Update Entry";
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteEntry(id) {
+            if (confirm('Are you sure you want to delete this log entry?')) {
+                logs = logs.filter(l => l.id !== id);
+                saveAndRender();
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('log-form').reset();
+            document.getElementById('entry-id').value = '';
+            document.getElementById('entry-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('form-title').textContent = "New Log Entry";
+            document.getElementById('submit-btn').textContent = "Save Log Entry";
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            calculateYield();
+        }
+
+        function saveAndRender() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+            renderData();
+        }
+
+        function renderData() {
+            const tbody = document.getElementById('log-table-body');
+            tbody.innerHTML = '';
+
+            const search = document.getElementById('filter-search').value.toLowerCase();
+            const filterAct = document.getElementById('filter-activity').value;
+            const filterOp = document.getElementById('filter-operator').value.toLowerCase();
+            const filterFlag = document.getElementById('filter-flagged').value;
+
+            const filtered = logs.filter(item => {
+                const matchesSearch = !search || Object.values(item).some(val => String(val).toLowerCase().includes(search));
+                const matchesAct = !filterAct || item.activity === filterAct;
+                const matchesOp = !filterOp || item.operator.toLowerCase().includes(filterOp);
+                const matchesFlag = !filterFlag || (filterFlag === 'flagged' && item.flagged);
+                return matchesSearch && matchesAct && matchesOp && matchesFlag;
+            });
+
+            // Update KPIs
+            let totalInput = 0;
+            let totalYieldSum = 0;
+            let yieldCount = 0;
+            let flaggedCount = 0;
+
+            filtered.forEach((item, index) => {
+                totalInput += item.inputQty || 0;
+                if (item.inputQty > 0) {
+                    totalYieldSum += (item.outputQty / item.inputQty) * 100;
+                    yieldCount++;
+                }
+                if (item.flagged) flaggedCount++;
+
+                const yieldVal = item.inputQty > 0 ? ((item.outputQty / item.inputQty) * 100).toFixed(1) + '%' : 'N/A';
+                const row = document.createElement('tr');
+                row.className = item.flagged ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-slate-50';
+
+                row.innerHTML = `
+                    <td class="p-2 border-r font-medium text-slate-500">${index + 1}</td>
+                    <td class="p-2 border-r whitespace-nowrap">${item.date}</td>
+                    <td class="p-2 border-r font-medium text-slate-800">${item.activity}</td>
+                    <td class="p-2 border-r">${item.rawMaterial || '-'}</td>
+                    <td class="p-2 border-r">${item.inputQty ? item.inputQty + ' ' + item.inputUnit : '-'}</td>
+                    <td class="p-2 border-r whitespace-nowrap">${item.startTime || ''} ${item.endTime ? '- ' + item.endTime : ''}</td>
+                    <td class="p-2 border-r">${item.outputProduct || '-'}</td>
+                    <td class="p-2 border-r">${item.outputQty ? item.outputQty + ' ' + item.outputUnit : '-'}</td>
+                    <td class="p-2 border-r font-semibold text-brand-700">${yieldVal}</td>
+                    <td class="p-2 border-r">${item.operator}</td>
+                    <td class="p-2 border-r">${item.flagged ? '<span class="inline-block bg-amber-200 text-amber-900 font-bold px-1 rounded text-xs mr-1">FLAG</span>' : ''}${item.remarks || '-'}</td>
+                    <td class="p-2 text-center no-print whitespace-nowrap space-x-1">
+                        <button onclick="editEntry(${item.id})" class="text-blue-600 hover:text-blue-800 font-medium">Edit</button>
+                        <button onclick="deleteEntry(${item.id})" class="text-red-600 hover:text-red-800 font-medium">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('kpi-batches').textContent = filtered.length;
+            document.getElementById('kpi-input').innerHTML = `${totalInput.toFixed(1)} <span class="text-sm font-normal text-slate-500">kg</span>`;
+            document.getElementById('kpi-yield').textContent = yieldCount > 0 ? (totalYieldSum / yieldCount).toFixed(1) + '%' : '0%';
+            document.getElementById('kpi-flags').textContent = flaggedCount;
+        }
+
+        function exportCSV() {
+            if (logs.length === 0) {
+                alert("No log data available to export.");
+                return;
+            }
+
+            const headers = ["No", "Date", "Activity/Process", "Raw Material", "Input Qty", "Input Unit", "Start Time", "End Time", "Output Product", "Output Qty", "Output Unit", "Yield (%)", "Operator", "Remarks", "Flagged"];
+            const rows = logs.map((l, idx) => [
+                idx + 1,
+                `"${l.date}"`,
+                `"${l.activity}"`,
+                `"${l.rawMaterial || ''}"`,
+                l.inputQty,
+                `"${l.inputUnit}"`,
+                `"${l.startTime || ''}"`,
+                `"${l.endTime || ''}"`,
+                `"${l.outputProduct || ''}"`,
+                l.outputQty,
+                `"${l.outputUnit}"`,
+                l.inputQty > 0 ? ((l.outputQty / l.inputQty) * 100).toFixed(2) : 0,
+                `"${l.operator}"`,
+                `"${(l.remarks || '').replace(/"/g, '""')}"`,
+                l.flagged ? "Yes" : "No"
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Solid_Waste_Plant_Logbook_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function clearAllData() {
+            if (confirm("Are you sure you want to clear ALL logged data? This action cannot be undone.")) {
+                logs = [];
+                saveAndRender();
+            }
+        }
+
+        // Initialize UI render
+        renderData();
+    </script>
+</body>
+</html>
