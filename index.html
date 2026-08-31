@@ -2398,40 +2398,77 @@ db.auth.onAuthStateChange(
 ============================================================ */
 
 document.addEventListener(
-'DOMContentLoaded',
-() => {
+    'DOMContentLoaded',
+    () => {
 
-    
-    /*
-     * LOG ENTRY FORM
-     */
-    document
-        .getElementById('log-form')
-        .addEventListener(
-            'submit',
-            handleFormSubmit
-        );
+        console.log('APPLICATION STARTED');
+
+        /*
+         * LOGIN FORM
+         */
+        const loginForm =
+            document.getElementById('login-form');
+
+        if (loginForm) {
+
+            loginForm.addEventListener(
+                'submit',
+                handleLogin
+            );
+
+            console.log('LOGIN FORM CONNECTED');
+
+        } else {
+
+            console.error(
+                'LOGIN FORM NOT FOUND'
+            );
+
+        }
 
 
-    /*
-     * Set today's date.
-     */
-    document
-        .getElementById('entry-date')
-        .value =
-        todayLocal();
+        /*
+         * LOG ENTRY FORM
+         */
+        const logForm =
+            document.getElementById('log-form');
+
+        if (logForm) {
+
+            logForm.addEventListener(
+                'submit',
+                handleFormSubmit
+            );
+
+        } else {
+
+            console.error(
+                'LOG FORM NOT FOUND'
+            );
+
+        }
 
 
-    /*
-     * Check for an existing session.
-     */
-    checkExistingSession();
+        /*
+         * Set today's date.
+         */
+        const entryDate =
+            document.getElementById('entry-date');
 
-}
+        if (entryDate) {
 
+            entryDate.value =
+                todayLocal();
+
+        }
+
+
+        /*
+         * Check for an existing session.
+         */
+        checkExistingSession();
+
+    }
 );
-
-</script>
-
 </body>
 </html>
