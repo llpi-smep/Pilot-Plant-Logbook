@@ -2403,9 +2403,11 @@ document.addEventListener(
 
         console.log('APPLICATION STARTED');
 
-        /*
-         * LOGIN FORM
-         */
+
+        /* =====================================================
+           LOGIN FORM
+        ===================================================== */
+
         const loginForm =
             document.getElementById('login-form');
 
@@ -2416,7 +2418,9 @@ document.addEventListener(
                 handleLogin
             );
 
-            console.log('LOGIN FORM CONNECTED');
+            console.log(
+                'LOGIN FORM CONNECTED'
+            );
 
         } else {
 
@@ -2427,9 +2431,10 @@ document.addEventListener(
         }
 
 
-        /*
-         * LOG ENTRY FORM
-         */
+        /* =====================================================
+           LOG ENTRY FORM
+        ===================================================== */
+
         const logForm =
             document.getElementById('log-form');
 
@@ -2438,6 +2443,10 @@ document.addEventListener(
             logForm.addEventListener(
                 'submit',
                 handleFormSubmit
+            );
+
+            console.log(
+                'LOG FORM CONNECTED'
             );
 
         } else {
@@ -2449,9 +2458,10 @@ document.addEventListener(
         }
 
 
-        /*
-         * Set today's date.
-         */
+        /* =====================================================
+           SET TODAY'S DATE
+        ===================================================== */
+
         const entryDate =
             document.getElementById('entry-date');
 
@@ -2463,12 +2473,11 @@ document.addEventListener(
         }
 
 
-        /*
-         * Check for an existing session.
-         */
+        /* =====================================================
+           CHECK EXISTING SESSION
+        ===================================================== */
+
         checkExistingSession();
 
     }
 );
-</body>
-</html>
