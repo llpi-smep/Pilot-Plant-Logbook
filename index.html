@@ -2398,17 +2398,47 @@ db.auth.onAuthStateChange(
 ============================================================ */
 
 document.addEventListener(
-    'DOMContentLoaded',
-    () => {
+'DOMContentLoaded',
+() => {
 
-        document
-            .getElementById('entry-date')
-            .value =
-            todayLocal();
+    /*
+     * LOGIN FORM
+     */
+    document
+        .getElementById('login-form')
+        .addEventListener(
+            'submit',
+            handleLogin
+        );
 
-        checkExistingSession();
 
-    }
+    /*
+     * LOG ENTRY FORM
+     */
+    document
+        .getElementById('log-form')
+        .addEventListener(
+            'submit',
+            handleFormSubmit
+        );
+
+
+    /*
+     * Set today's date.
+     */
+    document
+        .getElementById('entry-date')
+        .value =
+        todayLocal();
+
+
+    /*
+     * Check for an existing session.
+     */
+    checkExistingSession();
+
+}
+
 );
 
 </script>
