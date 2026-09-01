@@ -1383,6 +1383,7 @@ function calculateYield() {
 }
 
 
+```javascript
 /* ============================================================
    FORM SUBMISSION
 ============================================================ */
@@ -1398,10 +1399,8 @@ async function handleFormSubmit(event) {
         return;
     }
 
-
     const id =
-        document.getElementById('entry-id').value;
-
+        document.getElementById('entry-id').value.trim();
 
     const entryData = {
 
@@ -1447,7 +1446,6 @@ async function handleFormSubmit(event) {
 
         flagged:
             document.getElementById('entry-flagged').checked
-
     };
 
 
@@ -1455,61 +1453,120 @@ async function handleFormSubmit(event) {
         document.getElementById('submit-btn');
 
     submitButton.disabled = true;
+
     submitButton.textContent =
         id ? 'Updating...' : 'Saving...';
 
 
     try {
 
+        /* =====================================================
+           UPDATE EXISTING ENTRY
+        ===================================================== */
+
         if (id) {
 
-            /*
-             * UPDATE
-             */
-            const { error } =
+            entryData.updated_by =
+                currentUser.id;
+
+            entryData.updated_at =
+                new Date().toISOString();
+
+
+            const { data, error } =
                 await db
                     .from('pilot_plant_logs')
                     .update(entryData)
-                    .eq('id', Number(id));
+                    .eq('id', Number(id))
+                    .select()
+                    .single();
+
 
             if (error) {
                 throw error;
             }
 
-        } else {
 
-            /*
-             * INSERT
-             */
-            entryData.created_by =
-                currentUser.id;
+            if (!data) {
 
-            const { error } =
-                await db
-                    .from('pilot_plant_logs')
-                    .insert(entryData);
+                throw new Error(
+                    'The record was not updated. ' +
+                    'Please check your permissions or the record ID.'
+                );
 
-            if (error) {
-                throw error;
             }
+
+
+            alert(
+                'Log entry #' +
+                id +
+                ' was updated successfully.'
+            );
+
         }
 
 
-        /*
-         * Reload database records.
-         */
+        /* =====================================================
+           INSERT NEW ENTRY
+        ===================================================== */
+
+        else {
+
+            entryData.created_by =
+                currentUser.id;
+
+
+            const { data, error } =
+                await db
+                    .from('pilot_plant_logs')
+                    .insert(entryData)
+                    .select()
+                    .single();
+
+
+            if (error) {
+                throw error;
+            }
+
+
+            if (!data) {
+
+                throw new Error(
+                    'The new log entry could not be created.'
+                );
+
+            }
+
+
+            alert(
+                'New log entry saved successfully.'
+            );
+
+        }
+
+
+        /* =====================================================
+           RELOAD DATABASE RECORDS
+        ===================================================== */
+
         await loadLogs();
 
         resetForm();
 
+
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            'Save/Update error:',
+            error
+        );
+
 
         alert(
             'Could not save the log entry.\n\n' +
             error.message
         );
+
 
     } finally {
 
@@ -1519,7 +1576,9 @@ async function handleFormSubmit(event) {
             'Save Log Entry';
 
     }
+
 }
+```
 
 
 /* ============================================================
