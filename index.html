@@ -2085,11 +2085,7 @@ const canEdit =
 const canDelete =
     userRole === 'administrator';
 
-
-        const canDelete =
-            currentProfile.role === 'administrator';
-
-
+      
         let actions = '';
 
 
@@ -2382,9 +2378,6 @@ console.log('CHECKING SESSION...');
 db.auth.onAuthStateChange(
     async (event, session) => {
 
-      db.auth.onAuthStateChange(
-    async (event, session) => {
-
         if (
             event === 'SIGNED_IN' &&
             session
@@ -2396,6 +2389,7 @@ db.auth.onAuthStateChange(
 
         }
 
+
         if (event === 'SIGNED_OUT') {
 
             currentUser = null;
@@ -2406,19 +2400,6 @@ db.auth.onAuthStateChange(
 
     }
 );
-        if (
-            event === 'SIGNED_OUT'
-        ) {
-
-            currentUser = null;
-            currentProfile = null;
-            logs = [];
-
-        }
-
-    }
-);
-
 
 /* ============================================================
    INITIALIZATION
