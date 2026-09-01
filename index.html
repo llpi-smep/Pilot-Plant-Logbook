@@ -1466,44 +1466,37 @@ async function handleFormSubmit(event) {
 
         if (id) {
 
-            entryData.updated_by =
-                currentUser.id;
+    /*
+     * UPDATE
+     */
+    const { data: updatedRows, error } =
+        await db
+            .from('pilot_plant_logs')
+            .update({
+                ...entryData,
+                updated_by: currentUser.id
+            })
+            .eq('id', Number(id))
+            .select();
 
-            entryData.updated_at =
-                new Date().toISOString();
+    console.log('UPDATE RESULT:', {
+        updatedRows,
+        error
+    });
 
+    if (error) {
+        console.error('UPDATE ERROR:', error);
+        throw error;
+    }
 
-            const { data, error } =
-                await db
-                    .from('pilot_plant_logs')
-                    .update(entryData)
-                    .eq('id', Number(id))
-                    .select()
-                    .single();
+    if (!updatedRows || updatedRows.length === 0) {
+        throw new Error(
+            'The update request completed, but no record was updated. ' +
+            'Please check the record ID and update permissions.'
+        );
+    }
 
-
-            if (error) {
-                throw error;
-            }
-
-
-            if (!data) {
-
-                throw new Error(
-                    'The record was not updated. ' +
-                    'Please check your permissions or the record ID.'
-                );
-
-            }
-
-
-            alert(
-                'Log entry #' +
-                id +
-                ' was updated successfully.'
-            );
-
-        }
+} else {
 
 
         /* =====================================================
