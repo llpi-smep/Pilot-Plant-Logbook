@@ -2067,10 +2067,23 @@ function renderData() {
                 : 'N/A';
 
 
-        const canEdit =
-            currentProfile.role === 'administrator' ||
-            currentProfile.role === 'supervisor' ||
-            item.created_by === currentUser.id;
+   const userRole =
+    currentProfile
+        ? currentProfile.role
+        : '';
+
+const currentUserId =
+    currentUser
+        ? currentUser.id
+        : '';
+
+const canEdit =
+    userRole === 'administrator' ||
+    userRole === 'supervisor' ||
+    item.created_by === currentUserId;
+
+const canDelete =
+    userRole === 'administrator';
 
 
         const canDelete =
@@ -2369,16 +2382,30 @@ console.log('CHECKING SESSION...');
 db.auth.onAuthStateChange(
     async (event, session) => {
 
+      db.auth.onAuthStateChange(
+    async (event, session) => {
+
         if (
             event === 'SIGNED_IN' &&
             session
         ) {
 
-            currentUser =
-                session.user;
+            currentUser = session.user;
+
+            await initializeApplication();
 
         }
 
+        if (event === 'SIGNED_OUT') {
+
+            currentUser = null;
+            currentProfile = null;
+            logs = [];
+
+        }
+
+    }
+);
         if (
             event === 'SIGNED_OUT'
         ) {
