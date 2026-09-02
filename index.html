@@ -2103,18 +2103,17 @@ function renderData() {
         let actions = '';
 
 
-        if (canEdit) {
+       if (canEdit) {
 
-            actions += `
-                <button
-                    onclick="editEntry(${Number(item.id)})"
-                    class="text-blue-600 hover:text-blue-800
-                           font-medium mr-2">
-                    Edit
-                </button>
-            `;
+    actions += `
+        <button
+            onclick="editEntry(${Number(item.id)})"
+            class="text-blue-600 hover:text-blue-800 font-medium mr-2">
+            Edit
+        </button>
+    `;
 
-        }
+}
 
 
         if (canDelete) {
