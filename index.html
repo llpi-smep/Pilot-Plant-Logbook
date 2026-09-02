@@ -462,11 +462,18 @@ async function initializeApplication() {
         }
 
         // Fallback profile if user_profiles table is restricted or row missing
-        currentProfile = profile || {
-            id: currentUser.id,
-            full_name: currentUser.email.split('@')[0],
-            role: 'operator'
-        };
+      const isAdminEmail = currentUser.email.toLowerCase() === 'seidmohammed02@gmail.com';
+
+currentProfile = profile || {
+    id: currentUser.id,
+    full_name: currentUser.email.split('@')[0],
+    role: isAdminEmail ? 'administrator' : 'operator'
+};
+
+// Guarantee admin role if email matches
+if (isAdminEmail) {
+    currentProfile.role = 'administrator';
+}
 
         document.getElementById('current-user-name').textContent = currentProfile.full_name || currentUser.email;
         document.getElementById('current-user-role').textContent = currentProfile.role.toUpperCase();
