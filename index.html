@@ -1400,54 +1400,87 @@ async function handleFormSubmit(event) {
     }
 
     const id =
-        document.getElementById('entry-id').value.trim();
+        document
+            .getElementById('entry-id')
+            .value
+            .trim();
 
     const entryData = {
 
         log_date:
-            document.getElementById('entry-date').value,
+            document
+                .getElementById('entry-date')
+                .value,
 
         activity:
-            document.getElementById('entry-activity').value,
+            document
+                .getElementById('entry-activity')
+                .value,
 
         operator_name:
-            document.getElementById('entry-operator').value.trim(),
+            document
+                .getElementById('entry-operator')
+                .value
+                .trim(),
 
         raw_material:
-            document.getElementById('entry-raw-material').value.trim(),
+            document
+                .getElementById('entry-raw-material')
+                .value
+                .trim(),
 
         input_qty:
             parseFloat(
-                document.getElementById('entry-input-qty').value
+                document
+                    .getElementById('entry-input-qty')
+                    .value
             ) || 0,
 
         input_unit:
-            document.getElementById('entry-input-unit').value,
+            document
+                .getElementById('entry-input-unit')
+                .value,
 
         output_product:
-            document.getElementById('entry-output-product').value.trim(),
+            document
+                .getElementById('entry-output-product')
+                .value
+                .trim(),
 
         output_qty:
             parseFloat(
-                document.getElementById('entry-output-qty').value
+                document
+                    .getElementById('entry-output-qty')
+                    .value
             ) || 0,
 
         output_unit:
-            document.getElementById('entry-output-unit').value,
+            document
+                .getElementById('entry-output-unit')
+                .value,
 
         start_time:
-            document.getElementById('entry-start-time').value || null,
+            document
+                .getElementById('entry-start-time')
+                .value || null,
 
         end_time:
-            document.getElementById('entry-end-time').value || null,
+            document
+                .getElementById('entry-end-time')
+                .value || null,
 
         remarks:
-            document.getElementById('entry-remarks').value.trim(),
+            document
+                .getElementById('entry-remarks')
+                .value
+                .trim(),
 
         flagged:
-            document.getElementById('entry-flagged').checked
-    };
+            document
+                .getElementById('entry-flagged')
+                .checked
 
+    };
 
     const submitButton =
         document.getElementById('submit-btn');
@@ -1457,7 +1490,6 @@ async function handleFormSubmit(event) {
     submitButton.textContent =
         id ? 'Updating...' : 'Saving...';
 
-
     try {
 
         /* =====================================================
@@ -1466,61 +1498,55 @@ async function handleFormSubmit(event) {
 
         if (id) {
 
-    /*
-     * UPDATE
-     */
-    const { data: updatedRows, error } =
-        await db
-            .from('pilot_plant_logs')
-            .update({
-                ...entryData,
-                updated_by: currentUser.id
-            })
-            .eq('id', Number(id))
-            .select();
-
-    console.log('UPDATE RESULT:', {
-        updatedRows,
-        error
-    });
-
-    if (error) {
-        console.error('UPDATE ERROR:', error);
-        throw error;
-    }
-
-    if (!updatedRows || updatedRows.length === 0) {
-        throw new Error(
-            'The update request completed, but no record was updated. ' +
-            'Please check the record ID and update permissions.'
-        );
-    }
-
-} else {
-
-
-        /* =====================================================
-           INSERT NEW ENTRY
-        ===================================================== */
-
-        else {
-
-            entryData.created_by =
-                currentUser.id;
-
-
-            const { data, error } =
+            const { data: updatedRows, error } =
                 await db
                     .from('pilot_plant_logs')
-                    .insert(entryData)
-                    .select()
-                    .single();
-
+                    .update({
+                        ...entryData,
+                        updated_by: currentUser.id
+                    })
+                    .eq('id', Number(id))
+                    .select();
 
             if (error) {
                 throw error;
             }
 
+            if (
+                !updatedRows ||
+                updatedRows.length === 0
+            ) {
+
+                throw new Error(
+                    'The update was completed, but no record was updated. ' +
+                    'Please check the record and permissions.'
+                );
+
+            }
+
+            alert(
+                'Log entry updated successfully.'
+            );
+
+        } else {
+
+            /* =================================================
+               INSERT NEW ENTRY
+            ================================================= */
+
+            const { data, error } =
+                await db
+                    .from('pilot_plant_logs')
+                    .insert({
+                        ...entryData,
+                        created_by: currentUser.id
+                    })
+                    .select()
+                    .single();
+
+            if (error) {
+                throw error;
+            }
 
             if (!data) {
 
@@ -1530,13 +1556,11 @@ async function handleFormSubmit(event) {
 
             }
 
-
             alert(
                 'New log entry saved successfully.'
             );
 
         }
-
 
         /* =====================================================
            RELOAD DATABASE RECORDS
@@ -1546,7 +1570,6 @@ async function handleFormSubmit(event) {
 
         resetForm();
 
-
     } catch (error) {
 
         console.error(
@@ -1554,12 +1577,13 @@ async function handleFormSubmit(event) {
             error
         );
 
-
         alert(
             'Could not save the log entry.\n\n' +
-            error.message
+            (
+                error.message ||
+                'Unknown error occurred.'
+            )
         );
-
 
     } finally {
 
@@ -1571,9 +1595,6 @@ async function handleFormSubmit(event) {
     }
 
 }
-```
-
-
 /* ============================================================
    EDIT ENTRY
 ============================================================ */
