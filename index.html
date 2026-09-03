@@ -247,15 +247,15 @@
                     <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Start Time</label>
-                            <input type="text" id="entry-start-time" placeholder="e.g. 08:30 AM" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                            <input type="time" id="entry-start-time" oninput="calculateDuration()" class="w-full rounded-md border-slate-300 border p-2 text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">End Time</label>
-                            <input type="text" id="entry-end-time" placeholder="e.g. 11:00 AM" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                            <input type="time" id="entry-end-time" oninput="calculateDuration()" class="w-full rounded-md border-slate-300 border p-2 text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Duration</label>
-                            <input type="text" id="entry-duration" placeholder="e.g. 2hr 30min" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                            <input type="text" id="entry-duration" readonly placeholder="Auto calculated" class="w-full rounded-md border-slate-300 border p-2 text-sm bg-slate-100 text-slate-600 cursor-not-allowed">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Temp (°C)</label>
@@ -366,6 +366,36 @@ const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 let logs = [];
 let currentUser = null;
 let currentProfile = null;
+
+function calculateDuration() {
+    const startTime = document.getElementById('entry-start-time').value;
+    const endTime = document.getElementById('entry-end-time').value;
+    const durationInput = document.getElementById('entry-duration');
+
+    if (startTime && endTime) {
+        const [startHours, startMinutes] = startTime.split(':').map(Number);
+        const [endHours, endMinutes] = endTime.split(':').map(Number);
+
+        let startInMinutes = startHours * 60 + startMinutes;
+        let endInMinutes = endHours * 60 + endMinutes;
+
+        if (endInMinutes < startInMinutes) {
+            endInMinutes += 24 * 60; // Handles overnight process runs
+        }
+
+        const diffMinutes = endInMinutes - startInMinutes;
+        const hours = Math.floor(diffMinutes / 60);
+        const minutes = diffMinutes % 60;
+
+        let result = '';
+        if (hours > 0) result += `${hours}hr `;
+        if (minutes > 0 || hours === 0) result += `${minutes}min`;
+
+        durationInput.value = result.trim();
+    } else {
+        durationInput.value = '';
+    }
+}
 
 function showLoading(show) {
     const element = document.getElementById('loading-message');
@@ -556,6 +586,8 @@ function editEntry(id) {
     document.getElementById('entry-evap-water').value = item.evap_water_recovered_l || '';
     document.getElementById('entry-final-product').value = item.output_qty || '';
 
+    calculateDuration(); // Trigger calculation for loaded edit values
+
     document.getElementById('form-title').textContent = 'Edit Batch #' + (item.batch_no || item.id);
     document.getElementById('cancel-edit-btn').classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -582,6 +614,7 @@ function resetForm() {
     if (currentProfile) document.getElementById('entry-operator').value = currentProfile.full_name || currentUser.email;
     document.getElementById('form-title').textContent = 'New Technical Framework Batch Log Entry';
     document.getElementById('cancel-edit-btn').classList.add('hidden');
+    calculateDuration();
 }
 
 function renderData() {
