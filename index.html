@@ -1,378 +1,666 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pilot Solid Waste Utilization Plant - Daily Operational Logbook</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilot Solid Waste Utilization Plant - Technical Logbook</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Supabase JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; }
+            .shadow-md, .shadow-lg { box-shadow: none !important; }
+            .border { border-color: #000 !important; }
+        }
+
+        .loading-spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #15803d;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
 
-  <!-- Navigation Bar -->
-  <header class="bg-emerald-800 text-white shadow-md">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-2">
-      <div>
-        <h1 class="text-2xl font-bold tracking-wide">Pilot Solid Waste Utilization Plant</h1>
-        <p class="text-xs text-emerald-200">LLPIRDC - SMEP Green Tannery Initiative</p>
-      </div>
-      <div class="text-right text-xs text-emerald-100">
-        <p>Location: Modjo, Ethiopia</p>
-        <p id="currentDateDisplay" class="font-medium"></p>
-      </div>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-8">
+            <div class="text-center mb-8">
+                <div class="mx-auto mb-4 w-16 h-16 rounded-full bg-brand-100 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v2a2 2 0 002 2m14 0v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6"></path>
+                    </svg>
+                </div>
+                <h1 class="text-xl font-bold text-slate-900">Pilot Plant Logbook</h1>
+                <p class="text-sm text-slate-500 mt-2">Secure institutional access</p>
+                <p class="text-xs text-slate-400 mt-1">Leather & Leather Products Industry Research & Development Center</p>
+            </div>
+
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                    <input type="email" id="login-email" required autocomplete="username" placeholder="Enter your email" class="w-full rounded-md border border-slate-300 p-3 text-sm focus:ring-brand-600 focus:border-brand-600">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                    <input type="password" id="login-password" required autocomplete="current-password" placeholder="Enter your password" class="w-full rounded-md border border-slate-300 p-3 text-sm focus:ring-brand-600 focus:border-brand-600">
+                </div>
+
+                <button type="submit" id="login-button" class="w-full bg-brand-700 hover:bg-brand-800 text-white font-semibold py-3 rounded-md transition shadow-sm">
+                    Sign In
+                </button>
+
+                <div id="login-error" class="hidden bg-red-50 border border-red-200 text-red-700 text-sm rounded-md p-3"></div>
+            </form>
+
+            <div class="mt-6 pt-5 border-t border-slate-200 text-center">
+                <p class="text-xs text-slate-400">Authorized personnel only</p>
+            </div>
+        </div>
     </div>
-  </header>
+</div>
 
-  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+<!-- APPLICATION MAIN -->
+<div id="app-container" class="hidden">
+    <header class="bg-brand-900 text-white shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+            <div class="md:flex md:items-center md:justify-between">
+                <div>
+                    <span class="text-xs font-semibold tracking-widest text-brand-100 uppercase block">Manufacturing Industry Development Institute</span>
+                    <span class="text-xs font-medium text-slate-300 block">Leather & Leather Products Industry Research & Development Center</span>
+                    <h1 class="text-2xl font-bold tracking-tight text-white mt-1">Pilot Solid Waste Utilization Plant — Process Logbook</h1>
+                    <div class="mt-2 flex items-center gap-2 text-xs">
+                        <span id="current-user-name" class="font-semibold"></span>
+                        <span class="text-slate-400">|</span>
+                        <span id="current-user-role" class="bg-brand-700 px-2 py-1 rounded"></span>
+                    </div>
+                </div>
 
-    <!-- Overview Metrics Cards -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold text-gray-500 uppercase">Total Raw Input</p>
-        <p id="statTotalInput" class="text-2xl font-bold text-gray-800 mt-1">0.00 <span class="text-sm font-normal text-gray-500">kg</span></p>
-      </div>
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold text-gray-500 uppercase">Total Output Yield</p>
-        <p id="statTotalYield" class="text-2xl font-bold text-emerald-600 mt-1">0.00 <span class="text-sm font-normal text-gray-500">kg</span></p>
-      </div>
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold text-gray-500 uppercase">Avg Conversion Rate</p>
-        <p id="statAvgRate" class="text-2xl font-bold text-blue-600 mt-1">0.0 <span class="text-sm font-normal text-gray-500">%</span></p>
-      </div>
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold text-gray-500 uppercase">Total Logs Recorded</p>
-        <p id="statTotalLogs" class="text-2xl font-bold text-indigo-600 mt-1">0</p>
-      </div>
-    </section>
-
-    <!-- Main Grid: Form & Table -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-      <!-- Form Section -->
-      <section class="lg:col-span-1 bg-white p-5 rounded-lg shadow-sm border border-gray-200">
-        <div class="flex justify-between items-center mb-4">
-          <h2 id="formTitle" class="text-lg font-bold text-gray-800">New Operational Entry</h2>
-          <button id="cancelEditBtn" onclick="resetForm()" class="hidden text-xs text-red-600 hover:underline">Cancel Edit</button>
-        </div>
-
-        <form id="logForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
-          <input type="hidden" id="entryId" value="" />
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1" for="logDate">Date</label>
-            <input type="date" id="logDate" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500" />
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1" for="shift">Shift</label>
-            <select id="shift" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500">
-              <option value="Morning">Morning (Shift A)</option>
-              <option value="Afternoon">Afternoon (Shift B)</option>
-              <option value="Night">Night (Shift C)</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1" for="wasteType">Waste Material Type</label>
-            <select id="wasteType" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500">
-              <option value="Fleshing Waste">Fleshing Waste</option>
-              <option value="Chrome Trimmings">Chrome Trimmings</option>
-              <option value="Buffing Dust">Buffing Dust</option>
-              <option value="Vegetable Tanned Offal">Vegetable Tanned Offal</option>
-              <option value="Tannery Sludge">Tannery Sludge</option>
-              <option value="Other Bio-Waste">Other Bio-Waste</option>
-            </select>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1" for="inputQty">Raw Input (kg)</label>
-              <input type="number" step="0.01" min="0" id="inputQty" required oninput="calculateRate()" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500" placeholder="0.00" />
+                <div class="mt-4 md:mt-0 flex flex-wrap gap-2">
+                    <button onclick="exportCSV()" class="bg-brand-700 hover:bg-brand-600 text-white px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-1 shadow-sm">Export CSV</button>
+                    <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-1 shadow-sm">Print / PDF</button>
+                    <button id="clear-data-button" onclick="adminClearAllData()" class="hidden bg-red-800 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium transition shadow-sm">Clear Data</button>
+                    <button onclick="logout()" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-md text-sm font-medium transition shadow-sm">Sign Out</button>
+                </div>
             </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1" for="outputQty">Yield Output (kg)</label>
-              <input type="number" step="0.01" min="0" id="outputQty" required oninput="calculateRate()" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500" placeholder="0.00" />
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Calculated Conversion Rate</label>
-            <div id="conversionRateDisplay" class="w-full px-3 py-2 bg-gray-100 border rounded-md text-sm text-gray-700 font-semibold">
-              0.00 %
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1" for="status">Operational Status</label>
-            <select id="status" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500">
-              <option value="Normal">Normal Operation</option>
-              <option value="Maintenance">Maintenance Required</option>
-              <option value="Interrupted">Process Interrupted</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1" for="operator">Operator / Researcher</label>
-            <input type="text" id="operator" required class="w-full px-3 py-2 border rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500" placeholder="e.g., Mohammed S." />
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1" for="notes">Operational Notes / Remarks</label>
-            <textarea id="notes" rows="2" class="w-full px-3 py-2 border rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500" placeholder="Parameter variations, issues, chemical additives used..."></textarea>
-          </div>
-
-          <button type="submit" id="submitBtn" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2 px-4 rounded-md shadow transition duration-150 text-sm">
-            Save Entry
-          </button>
-        </form>
-      </section>
-
-      <!-- Logs Table & Search Section -->
-      <section class="lg:col-span-2 bg-white p-5 rounded-lg shadow-sm border border-gray-200 space-y-4">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <h2 class="text-lg font-bold text-gray-800">Activity Logbook Records</h2>
-          <div class="w-full sm:w-auto flex gap-2">
-            <input type="text" id="searchInput" oninput="filterLogs()" placeholder="Search logs..." class="px-3 py-1.5 border rounded-md text-sm focus:ring-emerald-500 focus:border-emerald-500 w-full sm:w-64" />
-            <button onclick="clearAllData()" class="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-md text-xs font-medium whitespace-nowrap">
-              Clear All
-            </button>
-          </div>
         </div>
+    </header>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 text-xs uppercase font-semibold">
-                <th class="py-3 px-3">Date</th>
-                <th class="py-3 px-3">Shift</th>
-                <th class="py-3 px-3">Waste Type</th>
-                <th class="py-3 px-3 text-right">Input</th>
-                <th class="py-3 px-3 text-right">Output</th>
-                <th class="py-3 px-3 text-right">Rate</th>
-                <th class="py-3 px-3">Status</th>
-                <th class="py-3 px-3 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="logTableBody" class="divide-y divide-gray-100">
-              <!-- Dynamic rows rendered here -->
-            </tbody>
-          </table>
-          <p id="emptyMessage" class="text-center text-gray-500 py-6 hidden">No operational logs found.</p>
-        </div>
-      </section>
-
+    <div class="hidden print-only p-8 text-center border-b-2 border-black mb-6">
+        <h2 class="text-xl font-bold uppercase">Manufacturing Industry Development Institute</h2>
+        <h3 class="text-md font-semibold">Leather and Leather Products Industry Research and Development Center</h3>
+        <h4 class="text-sm font-medium">Pilot Solid Waste Utilization Plant — Technical Framework Logbook</h4>
     </div>
-  </main>
 
-  <script>
-    // LocalStorage Data Storage Key
-    const STORAGE_KEY = 'pilot_plant_logs';
-    let logsData = [];
+    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+        <!-- KPI DASHBOARD -->
+        <section class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 no-print">
+            <div class="bg-white shadow-sm rounded-lg border border-slate-200 p-5">
+                <dt class="text-sm font-medium text-slate-500 truncate">Total Batches Logged</dt>
+                <dd id="kpi-batches" class="mt-1 text-3xl font-semibold text-slate-900">0</dd>
+            </div>
+            <div class="bg-white shadow-sm rounded-lg border border-slate-200 p-5">
+                <dt class="text-sm font-medium text-slate-500 truncate">Total Waste Input</dt>
+                <dd id="kpi-input" class="mt-1 text-3xl font-semibold text-slate-900">0 <span class="text-sm font-normal text-slate-500">kg</span></dd>
+            </div>
+            <div class="bg-white shadow-sm rounded-lg border border-slate-200 p-5">
+                <dt class="text-sm font-medium text-slate-500 truncate">Evap Water Recovered</dt>
+                <dd id="kpi-water" class="mt-1 text-3xl font-semibold text-blue-600">0 <span class="text-sm font-normal text-slate-500">L</span></dd>
+            </div>
+            <div class="bg-white shadow-sm rounded-lg border border-slate-200 p-5">
+                <dt class="text-sm font-medium text-slate-500 truncate">Final Product Output</dt>
+                <dd id="kpi-output" class="mt-1 text-3xl font-semibold text-brand-700">0 <span class="text-sm font-normal text-slate-500">L</span></dd>
+            </div>
+        </section>
 
-    // Initialize Page
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('en-US', {
-        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
-      });
-      document.getElementById('logDate').valueAsDate = new Date();
-      loadLogs();
+        <!-- TECHNICAL ENTRY FORM -->
+        <section id="entry-form-section" class="bg-white shadow-sm rounded-lg border border-slate-200 p-6 no-print">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+                <h2 class="text-lg font-bold text-slate-900" id="form-title">New Technical Framework Batch Log Entry</h2>
+                <button id="cancel-edit-btn" onclick="resetForm()" class="hidden text-sm text-slate-500 hover:text-slate-800 underline">Cancel Edit</button>
+            </div>
+
+            <form id="log-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="entry-id">
+
+                <!-- ROW 1: Batch & Raw Material Info -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Batch No. *</label>
+                        <input type="text" id="entry-batch-no" placeholder="e.g. B-2026-01" required class="w-full rounded-md border-slate-300 border p-2 text-sm focus:ring-brand-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Date *</label>
+                        <input type="date" id="entry-date" required class="w-full rounded-md border-slate-300 border p-2 text-sm focus:ring-brand-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Type of Waste *</label>
+                        <input type="text" id="entry-waste-type" placeholder="e.g. Hair, MIX wesh hair" required class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Amount (kg) *</label>
+                        <input type="number" step="0.01" min="0" id="entry-input-qty" placeholder="0.00" required class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Operator Name *</label>
+                        <input type="text" id="entry-operator" placeholder="Operator name" required class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                    </div>
+                </div>
+
+                <!-- ROW 2: Process & Sub-Process Selection -->
+                <div class="bg-slate-50 p-4 rounded-md border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Process Stage *</label>
+                        <select id="entry-process" required class="w-full rounded-md border-slate-300 border p-2 text-sm bg-white">
+                            <option value="">-- Select Process --</option>
+                            <option value="Hydrolysis RXN">Hydrolysis RXN</option>
+                            <option value="Precipitation">Precipitation</option>
+                            <option value="Neutralization">Neutralization</option>
+                            <option value="Evaporation">Evaporation</option>
+                            <option value="Cooling">Cooling</option>
+                            <option value="collection">Collection</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Sub Process</label>
+                        <select id="entry-sub-process" class="w-full rounded-md border-slate-300 border p-2 text-sm bg-white">
+                            <option value="">-- Select Sub Process (Optional) --</option>
+                            <option value="pre-heating">pre-heating</option>
+                            <option value="main reaction">main reaction</option>
+                            <option value="main evaporation">main evaporation</option>
+                            <option value="other">Other / Custom</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ROW 3: Chemical Inputs -->
+                <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
+                    <span class="block text-xs font-bold text-slate-700 uppercase mb-2">Chemical Input (Reagents)</span>
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">KOH (kg)</label>
+                            <input type="number" step="0.01" min="0" id="entry-koh" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">H₃PO₄ (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-h3po4" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">H₂O (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-h2o" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">NaOH (kg)</label>
+                            <input type="number" step="0.01" min="0" id="entry-naoh" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Formic Acid (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-formic-acid" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Other Chem.</label>
+                            <input type="text" id="entry-other-chem" placeholder="Specify name/qty" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW 4: Process Parameters -->
+                <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
+                    <span class="block text-xs font-bold text-slate-700 uppercase mb-2">Process Parameters</span>
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Start Time</label>
+                            <input type="text" id="entry-start-time" placeholder="e.g. 08:30 AM" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">End Time</label>
+                            <input type="text" id="entry-end-time" placeholder="e.g. 11:00 AM" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Duration</label>
+                            <input type="text" id="entry-duration" placeholder="e.g. 2hr 30min" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Temp (°C)</label>
+                            <input type="number" step="0.1" id="entry-temp" placeholder="120" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Pressure (bar)</label>
+                            <input type="number" step="0.1" id="entry-pressure" placeholder="2.5" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Agitator (rpm)</label>
+                            <input type="number" step="1" id="entry-agitator" placeholder="150" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW 5: Output Volumes -->
+                <div class="bg-brand-50 p-4 rounded-md border border-brand-100">
+                    <span class="block text-xs font-bold text-brand-900 uppercase mb-2">Output Volume (L)</span>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Supernatant Vol. (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-supernatant" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Precipitated Vol. (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-precipitated" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Recovered Water from Evap. (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-evap-water" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-brand-900 mb-1">Final Product Output (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-final-product" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm font-bold text-brand-800">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-2">
+                    <button type="submit" id="submit-btn" class="bg-brand-700 hover:bg-brand-800 text-white font-medium px-6 py-2.5 rounded-md shadow-sm transition text-sm">Save Log Entry</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- TABLE MATCHING EXCEL FRAMEWORK -->
+        <section class="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-100 border-b border-slate-300 text-slate-800 text-center font-bold">
+                            <th rowspan="2" class="p-2 border-r">Batch No.</th>
+                            <th rowspan="2" class="p-2 border-r">Type of Waste</th>
+                            <th rowspan="2" class="p-2 border-r">Amount (kg)</th>
+                            <th rowspan="2" class="p-2 border-r">Process</th>
+                            <th rowspan="2" class="p-2 border-r">Sub Process</th>
+                            <th rowspan="2" class="p-2 border-r">Date</th>
+                            <th colspan="6" class="p-2 border-r bg-slate-200">Chemical Input</th>
+                            <th colspan="6" class="p-2 border-r bg-slate-100">Process Parameter</th>
+                            <th colspan="4" class="p-2 border-r bg-brand-100 text-brand-900">Output Volume (L)</th>
+                            <th rowspan="2" class="p-2 border-r">Operator</th>
+                            <th rowspan="2" class="p-2 no-print">Actions</th>
+                        </tr>
+                        <tr class="bg-slate-50 border-b border-slate-300 text-slate-700 text-center font-semibold">
+                            <th class="p-1 border-r">KOH (Kg)</th>
+                            <th class="p-1 border-r">H₃PO₄ (L)</th>
+                            <th class="p-1 border-r">H₂O (L)</th>
+                            <th class="p-1 border-r">NaOH (Kg)</th>
+                            <th class="p-1 border-r">Formic Acid (L)</th>
+                            <th class="p-1 border-r">Other</th>
+                            <th class="p-1 border-r">Start Time</th>
+                            <th class="p-1 border-r">End Time</th>
+                            <th class="p-1 border-r">Duration</th>
+                            <th class="p-1 border-r">Temp (°C)</th>
+                            <th class="p-1 border-r">Pressure (bar)</th>
+                            <th class="p-1 border-r">Agitator (rpm)</th>
+                            <th class="p-1 border-r">Supernatant (L)</th>
+                            <th class="p-1 border-r">Precipitated (L)</th>
+                            <th class="p-1 border-r">Recovered Water Evap (L)</th>
+                            <th class="p-1 border-r font-bold text-brand-900">Final Product (L)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-table-body" class="divide-y divide-slate-200 text-center"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- LOADING OVERLAY -->
+        <div id="loading-message" class="hidden fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl p-6 flex items-center gap-4">
+                <div class="loading-spinner"></div>
+                <span class="text-sm font-medium text-slate-700">Loading framework logs...</span>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- JAVASCRIPT -->
+<script>
+const SUPABASE_URL = 'https://wmwmsjxruuqydozottbs.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_ja5hYF7WRJF1HvodYFZf5Q_n1jaQ9K-';
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true }
+});
+
+let logs = [];
+let currentUser = null;
+let currentProfile = null;
+
+function showLoading(show) {
+    const element = document.getElementById('loading-message');
+    if (show) element.classList.remove('hidden');
+    else element.classList.add('hidden');
+}
+
+function showLoginError(msg) {
+    const error = document.getElementById('login-error');
+    error.textContent = msg;
+    error.classList.remove('hidden');
+}
+
+function hideLoginError() {
+    document.getElementById('login-error').classList.add('hidden');
+}
+
+function todayLocal() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    return new Date(now.getTime() - offset * 60 * 1000).toISOString().split('T')[0];
+}
+
+function escapeHTML(val) {
+    if (val === null || val === undefined) return '';
+    return String(val).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    hideLoginError();
+    const btn = document.getElementById('login-button');
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    btn.disabled = true;
+    btn.textContent = 'Signing in...';
+
+    try {
+        const { data, error } = await db.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        currentUser = data.user;
+        await initializeApplication();
+    } catch (err) {
+        showLoginError(err.message || 'Login failed.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+    }
+}
+
+async function logout() {
+    if (!confirm('Are you sure you want to sign out?')) return;
+    await db.auth.signOut();
+    currentUser = null;
+    currentProfile = null;
+    logs = [];
+    document.getElementById('app-container').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+    resetForm();
+}
+
+async function initializeApplication() {
+    showLoading(true);
+    try {
+        const { data: profile } = await db.from('user_profiles').select('id, full_name, role').eq('id', currentUser.id).maybeSingle();
+
+        const isAdminEmail = currentUser.email.toLowerCase() === 'seidmohammed02@gmail.com';
+        currentProfile = profile || {
+            id: currentUser.id,
+            full_name: currentUser.email.split('@')[0],
+            role: isAdminEmail ? 'administrator' : 'operator'
+        };
+
+        if (isAdminEmail) currentProfile.role = 'administrator';
+
+        document.getElementById('current-user-name').textContent = currentProfile.full_name || currentUser.email;
+        document.getElementById('current-user-role').textContent = currentProfile.role.toUpperCase();
+
+        if (currentProfile.role === 'administrator') {
+            document.getElementById('clear-data-button').classList.remove('hidden');
+        }
+
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-container').classList.remove('hidden');
+
+        await loadLogs();
+        resetForm();
+    } catch (err) {
+        alert('Initialization error: ' + err.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function loadLogs() {
+    showLoading(true);
+    try {
+        const { data, error } = await db.from('pilot_plant_logs').select('*').order('log_date', { ascending: false });
+        if (error) throw error;
+        logs = data || [];
+        renderData();
+    } catch (err) {
+        alert('Error loading logs: ' + err.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function handleFormSubmit(e) {
+    e.preventDefault();
+
+    const id = document.getElementById('entry-id').value.trim();
+    const entryData = {
+        batch_no: document.getElementById('entry-batch-no').value.trim(),
+        log_date: document.getElementById('entry-date').value,
+        waste_type: document.getElementById('entry-waste-type').value.trim(),
+        input_qty: parseFloat(document.getElementById('entry-input-qty').value) || 0,
+        operator_name: document.getElementById('entry-operator').value.trim(),
+        process_name: document.getElementById('entry-process').value,
+        sub_process: document.getElementById('entry-sub-process').value,
+        koh_kg: parseFloat(document.getElementById('entry-koh').value) || null,
+        h3po4_l: parseFloat(document.getElementById('entry-h3po4').value) || null,
+        h2o_l: parseFloat(document.getElementById('entry-h2o').value) || null,
+        naoh_kg: parseFloat(document.getElementById('entry-naoh').value) || null,
+        formic_acid_l: parseFloat(document.getElementById('entry-formic-acid').value) || null,
+        other_chem: document.getElementById('entry-other-chem').value.trim(),
+        start_time: document.getElementById('entry-start-time').value.trim(),
+        end_time: document.getElementById('entry-end-time').value.trim(),
+        duration_hr: document.getElementById('entry-duration').value.trim(),
+        temp_c: parseFloat(document.getElementById('entry-temp').value) || null,
+        pressure_bar: parseFloat(document.getElementById('entry-pressure').value) || null,
+        agitator_rpm: parseFloat(document.getElementById('entry-agitator').value) || null,
+        supernatant_vol_l: parseFloat(document.getElementById('entry-supernatant').value) || null,
+        precipitated_vol_l: parseFloat(document.getElementById('entry-precipitated').value) || null,
+        evap_water_recovered_l: parseFloat(document.getElementById('entry-evap-water').value) || null,
+        output_qty: parseFloat(document.getElementById('entry-final-product').value) || null,
+        activity: 'Technical Framework Batch'
+    };
+
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+
+    try {
+        if (id) {
+            const { error } = await db.from('pilot_plant_logs').update(entryData).eq('id', Number(id));
+            if (error) throw error;
+        } else {
+            entryData.created_by = currentUser.id;
+            const { error } = await db.from('pilot_plant_logs').insert(entryData);
+            if (error) throw error;
+        }
+        await loadLogs();
+        resetForm();
+    } catch (err) {
+        alert('Save error: ' + err.message);
+    } finally {
+        submitBtn.disabled = false;
+    }
+}
+
+function editEntry(id) {
+    const item = logs.find(l => Number(l.id) === Number(id));
+    if (!item) return;
+
+    document.getElementById('entry-id').value = item.id;
+    document.getElementById('entry-batch-no').value = item.batch_no || '';
+    document.getElementById('entry-date').value = item.log_date || '';
+    document.getElementById('entry-waste-type').value = item.waste_type || '';
+    document.getElementById('entry-input-qty').value = item.input_qty || '';
+    document.getElementById('entry-operator').value = item.operator_name || '';
+    document.getElementById('entry-process').value = item.process_name || '';
+    document.getElementById('entry-sub-process').value = item.sub_process || '';
+    document.getElementById('entry-koh').value = item.koh_kg || '';
+    document.getElementById('entry-h3po4').value = item.h3po4_l || '';
+    document.getElementById('entry-h2o').value = item.h2o_l || '';
+    document.getElementById('entry-naoh').value = item.naoh_kg || '';
+    document.getElementById('entry-formic-acid').value = item.formic_acid_l || '';
+    document.getElementById('entry-other-chem').value = item.other_chem || '';
+    document.getElementById('entry-start-time').value = item.start_time || '';
+    document.getElementById('entry-end-time').value = item.end_time || '';
+    document.getElementById('entry-duration').value = item.duration_hr || '';
+    document.getElementById('entry-temp').value = item.temp_c || '';
+    document.getElementById('entry-pressure').value = item.pressure_bar || '';
+    document.getElementById('entry-agitator').value = item.agitator_rpm || '';
+    document.getElementById('entry-supernatant').value = item.supernatant_vol_l || '';
+    document.getElementById('entry-precipitated').value = item.precipitated_vol_l || '';
+    document.getElementById('entry-evap-water').value = item.evap_water_recovered_l || '';
+    document.getElementById('entry-final-product').value = item.output_qty || '';
+
+    document.getElementById('form-title').textContent = 'Edit Batch #' + (item.batch_no || item.id);
+    document.getElementById('cancel-edit-btn').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function adminDeleteEntry(id) {
+    if (!confirm('Are you sure you want to delete this log entry?')) return;
+    showLoading(true);
+    try {
+        const { error } = await db.from('pilot_plant_logs').delete().eq('id', Number(id));
+        if (error) throw error;
+        await loadLogs();
+    } catch (err) {
+        alert('Delete error: ' + err.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+function resetForm() {
+    document.getElementById('log-form').reset();
+    document.getElementById('entry-id').value = '';
+    document.getElementById('entry-date').value = todayLocal();
+    if (currentProfile) document.getElementById('entry-operator').value = currentProfile.full_name || currentUser.email;
+    document.getElementById('form-title').textContent = 'New Technical Framework Batch Log Entry';
+    document.getElementById('cancel-edit-btn').classList.add('hidden');
+}
+
+function renderData() {
+    const tbody = document.getElementById('log-table-body');
+    tbody.innerHTML = '';
+
+    let totalInput = 0, totalOutput = 0, totalEvapWater = 0;
+
+    logs.forEach((item) => {
+        totalInput += Number(item.input_qty) || 0;
+        totalOutput += Number(item.output_qty) || 0;
+        totalEvapWater += Number(item.evap_water_recovered_l) || 0;
+
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-50';
+
+        row.innerHTML = `
+            <td class="p-2 border-r font-semibold whitespace-nowrap">${escapeHTML(item.batch_no || '-')}</td>
+            <td class="p-2 border-r font-medium">${escapeHTML(item.waste_type || '-')}</td>
+            <td class="p-2 border-r">${item.input_qty ? item.input_qty + ' kg' : '-'}</td>
+            <td class="p-2 border-r font-semibold text-slate-800">${escapeHTML(item.process_name || '-')}</td>
+            <td class="p-2 border-r text-slate-600">${escapeHTML(item.sub_process || '-')}</td>
+            <td class="p-2 border-r whitespace-nowrap">${escapeHTML(item.log_date || '-')}</td>
+            <td class="p-2 border-r">${item.koh_kg ? item.koh_kg + ' kg' : '-'}</td>
+            <td class="p-2 border-r">${item.h3po4_l ? item.h3po4_l + ' L' : '-'}</td>
+            <td class="p-2 border-r">${item.h2o_l ? item.h2o_l + ' L' : '-'}</td>
+            <td class="p-2 border-r">${item.naoh_kg ? item.naoh_kg + ' kg' : '-'}</td>
+            <td class="p-2 border-r">${item.formic_acid_l ? item.formic_acid_l + ' L' : '-'}</td>
+            <td class="p-2 border-r">${escapeHTML(item.other_chem || '-')}</td>
+            <td class="p-2 border-r">${escapeHTML(item.start_time || '-')}</td>
+            <td class="p-2 border-r">${escapeHTML(item.end_time || '-')}</td>
+            <td class="p-2 border-r">${escapeHTML(item.duration_hr || '-')}</td>
+            <td class="p-2 border-r">${item.temp_c ? item.temp_c + ' °C' : '-'}</td>
+            <td class="p-2 border-r">${item.pressure_bar ? item.pressure_bar + ' bar' : '-'}</td>
+            <td class="p-2 border-r">${item.agitator_rpm ? item.agitator_rpm + ' rpm' : '-'}</td>
+            <td class="p-2 border-r">${item.supernatant_vol_l ? item.supernatant_vol_l + ' L' : '-'}</td>
+            <td class="p-2 border-r">${item.precipitated_vol_l ? item.precipitated_vol_l + ' L' : '-'}</td>
+            <td class="p-2 border-r text-blue-600 font-semibold">${item.evap_water_recovered_l ? item.evap_water_recovered_l + ' L' : '-'}</td>
+            <td class="p-2 border-r font-bold text-brand-700">${item.output_qty ? item.output_qty + ' L' : '-'}</td>
+            <td class="p-2 border-r">${escapeHTML(item.operator_name || '-')}</td>
+            <td class="p-2 no-print whitespace-nowrap">
+                <button onclick="editEntry(${Number(item.id)})" class="text-blue-600 hover:text-blue-800 font-medium mr-2">Edit</button>
+                ${currentProfile.role === 'administrator' ? `<button onclick="adminDeleteEntry(${Number(item.id)})" class="text-red-600 hover:text-red-800 font-medium">Delete</button>` : ''}
+            </td>
+        `;
+        tbody.appendChild(row);
     });
 
-    // Load logs from LocalStorage
-    function loadLogs() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      logsData = stored ? JSON.parse(stored) : [];
-      renderLogs();
-      updateMetrics();
+    document.getElementById('kpi-batches').textContent = logs.length;
+    document.getElementById('kpi-input').innerHTML = totalInput.toFixed(1) + ' <span class="text-sm font-normal text-slate-500">kg</span>';
+    document.getElementById('kpi-water').innerHTML = totalEvapWater.toFixed(1) + ' <span class="text-sm font-normal text-slate-500">L</span>';
+    document.getElementById('kpi-output').innerHTML = totalOutput.toFixed(1) + ' <span class="text-sm font-normal text-slate-500">L</span>';
+}
+
+function exportCSV() {
+    if (logs.length === 0) return alert('No log data available.');
+    const headers = ['Batch No.', 'Type of Waste', 'Amount (kg)', 'Process', 'Sub Process', 'Date', 'KOH (kg)', 'H3PO4 (L)', 'H2O (L)', 'NaOH (kg)', 'Formic Acid (L)', 'Other Chem', 'Start Time', 'End Time', 'Duration', 'Temp (C)', 'Pressure (bar)', 'Agitator (rpm)', 'Supernatant (L)', 'Precipitated (L)', 'Evap Water Recovered (L)', 'Final Product (L)', 'Operator'];
+    const rows = logs.map(i => [i.batch_no, i.waste_type, i.input_qty, i.process_name, i.sub_process, i.log_date, i.koh_kg, i.h3po4_l, i.h2o_l, i.naoh_kg, i.formic_acid_l, i.other_chem, i.start_time, i.end_time, i.duration_hr, i.temp_c, i.pressure_bar, i.agitator_rpm, i.supernatant_vol_l, i.precipitated_vol_l, i.evap_water_recovered_l, i.output_qty, i.operator_name]);
+    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v||''}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'Pilot_Plant_Framework_Logbook_' + todayLocal() + '.csv';
+    link.click();
+}
+
+async function checkExistingSession() {
+    const { data } = await db.auth.getSession();
+    if (data && data.session) {
+        currentUser = data.session.user;
+        await initializeApplication();
     }
+}
 
-    // Save current logs to LocalStorage
-    function saveLogs() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(logsData));
-      updateMetrics();
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('entry-date').value = todayLocal();
+    checkExistingSession();
+});
+</script>
 
-    // Dynamic rate display during form entry
-    function calculateRate() {
-      const input = parseFloat(document.getElementById('inputQty').value) || 0;
-      const output = parseFloat(document.getElementById('outputQty').value) || 0;
-      const display = document.getElementById('conversionRateDisplay');
-      
-      if (input > 0) {
-        const rate = ((output / input) * 100).toFixed(2);
-        display.textContent = `${rate} %`;
-      } else {
-        display.textContent = '0.00 %';
-      }
-    }
-
-    // Handle Form Submit (Create / Edit)
-    function handleFormSubmit(event) {
-      event.preventDefault();
-
-      const id = document.getElementById('entryId').value;
-      const logDate = document.getElementById('logDate').value;
-      const shift = document.getElementById('shift').value;
-      const wasteType = document.getElementById('wasteType').value;
-      const inputQty = parseFloat(document.getElementById('inputQty').value) || 0;
-      const outputQty = parseFloat(document.getElementById('outputQty').value) || 0;
-      const status = document.getElementById('status').value;
-      const operator = document.getElementById('operator').value;
-      const notes = document.getElementById('notes').value;
-
-      const rate = inputQty > 0 ? parseFloat(((outputQty / inputQty) * 100).toFixed(2)) : 0;
-
-      if (id) {
-        // Edit existing record
-        const index = logsData.findIndex(item => item.id === id);
-        if (index !== -1) {
-          logsData[index] = { id, logDate, shift, wasteType, inputQty, outputQty, rate, status, operator, notes };
-        }
-      } else {
-        // Add new record
-        const newEntry = {
-          id: Date.now().toString(),
-          logDate,
-          shift,
-          wasteType,
-          inputQty,
-          outputQty,
-          rate,
-          status,
-          operator,
-          notes
-        };
-        logsData.unshift(newEntry);
-      }
-
-      saveLogs();
-      renderLogs();
-      resetForm();
-    }
-
-    // Edit an entry
-    function editEntry(id) {
-      const item = logsData.find(e => e.id === id);
-      if (!item) return;
-
-      document.getElementById('entryId').value = item.id;
-      document.getElementById('logDate').value = item.logDate;
-      document.getElementById('shift').value = item.shift;
-      document.getElementById('wasteType').value = item.wasteType;
-      document.getElementById('inputQty').value = item.inputQty;
-      document.getElementById('outputQty').value = item.outputQty;
-      document.getElementById('status').value = item.status;
-      document.getElementById('operator').value = item.operator;
-      document.getElementById('notes').value = item.notes;
-
-      calculateRate();
-
-      document.getElementById('formTitle').textContent = 'Edit Operational Entry';
-      document.getElementById('submitBtn').textContent = 'Update Entry';
-      document.getElementById('cancelEditBtn').classList.remove('hidden');
-    }
-
-    // Delete an entry
-    function deleteEntry(id) {
-      if (confirm('Are you sure you want to delete this log entry?')) {
-        logsData = logsData.filter(item => item.id !== id);
-        saveLogs();
-        renderLogs();
-      }
-    }
-
-    // Reset Form
-    function resetForm() {
-      document.getElementById('logForm').reset();
-      document.getElementById('entryId').value = '';
-      document.getElementById('logDate').valueAsDate = new Date();
-      document.getElementById('conversionRateDisplay').textContent = '0.00 %';
-      document.getElementById('formTitle').textContent = 'New Operational Entry';
-      document.getElementById('submitBtn').textContent = 'Save Entry';
-      document.getElementById('cancelEditBtn').classList.add('hidden');
-    }
-
-    // Render Logs Table
-    function renderLogs(filterTerm = '') {
-      const tbody = document.getElementById('logTableBody');
-      const emptyMsg = document.getElementById('emptyMessage');
-      tbody.innerHTML = '';
-
-      const filtered = logsData.filter(item => {
-        const term = filterTerm.toLowerCase();
-        return (
-          item.wasteType.toLowerCase().includes(term) ||
-          item.operator.toLowerCase().includes(term) ||
-          item.status.toLowerCase().includes(term) ||
-          item.shift.toLowerCase().includes(term) ||
-          item.logDate.includes(term)
-        );
-      });
-
-      if (filtered.length === 0) {
-        emptyMsg.classList.remove('hidden');
-        return;
-      } else {
-        emptyMsg.classList.add('hidden');
-      }
-
-      filtered.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-gray-50 text-xs sm:text-sm';
-
-        // Badge styling based on status
-        let statusBadge = '';
-        if (item.status === 'Normal') {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-xs bg-emerald-100 text-emerald-800">Normal</span>';
-        } else if (item.status === 'Maintenance') {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800">Maintenance</span>';
-        } else {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-800">Interrupted</span>';
-        }
-
-        tr.innerHTML = `
-          <td class="py-2.5 px-3 whitespace-nowrap font-medium text-gray-700">${item.logDate}</td>
-          <td class="py-2.5 px-3">${item.shift}</td>
-          <td class="py-2.5 px-3">${item.wasteType}</td>
-          <td class="py-2.5 px-3 text-right">${item.inputQty.toFixed(2)}</td>
-          <td class="py-2.5 px-3 text-right font-semibold text-emerald-700">${item.outputQty.toFixed(2)}</td>
-          <td class="py-2.5 px-3 text-right">${item.rate.toFixed(2)}%</td>
-          <td class="py-2.5 px-3">${statusBadge}</td>
-          <td class="py-2.5 px-3 text-center whitespace-nowrap">
-            <button onclick="editEntry('${item.id}')" class="text-blue-600 hover:text-blue-800 font-medium mr-2">Edit</button>
-            <button onclick="deleteEntry('${item.id}')" class="text-red-600 hover:text-red-800 font-medium">Delete</button>
-          </td>
-        `;
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    // Filter Logs by Search Input
-    function filterLogs() {
-      const term = document.getElementById('searchInput').value;
-      renderLogs(term);
-    }
-
-    // Calculate & Update Metrics Cards
-    function updateMetrics() {
-      const totalInput = logsData.reduce((acc, curr) => acc + curr.inputQty, 0);
-      const totalYield = logsData.reduce((acc, curr) => acc + curr.outputQty, 0);
-      const avgRate = totalInput > 0 ? ((totalYield / totalInput) * 100).toFixed(2) : '0.0';
-
-      document.getElementById('statTotalInput').innerHTML = `${totalInput.toFixed(2)} <span class="text-sm font-normal text-gray-500">kg</span>`;
-      document.getElementById('statTotalYield').innerHTML = `${totalYield.toFixed(2)} <span class="text-sm font-normal text-gray-500">kg</span>`;
-      document.getElementById('statAvgRate').innerHTML = `${avgRate} <span class="text-sm font-normal text-gray-500">%</span>`;
-      document.getElementById('statTotalLogs').textContent = logsData.length;
-    }
-
-    // Clear All Records
-    function clearAllData() {
-      if (confirm('Are you sure you want to clear all log entries from browser storage?')) {
-        localStorage.removeItem(STORAGE_KEY);
-        loadLogs();
-      }
-    }
-  </script>
 </body>
 </html>
