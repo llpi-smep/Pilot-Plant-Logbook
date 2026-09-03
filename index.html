@@ -241,9 +241,9 @@
                     </div>
                 </div>
 
-                <!-- ROW 4: Process Parameters -->
-                <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
-                    <span class="block text-xs font-bold text-slate-700 uppercase mb-2">Process Parameters</span>
+                <!-- ROW 4: Process Parameters & Remark -->
+                <div class="bg-slate-50 p-4 rounded-md border border-slate-200 space-y-3">
+                    <span class="block text-xs font-bold text-slate-700 uppercase">Process Parameters</span>
                     <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Start Time</label>
@@ -269,6 +269,10 @@
                             <label class="block text-xs font-medium text-slate-600 mb-1">Agitator (rpm)</label>
                             <input type="number" step="1" id="entry-agitator" placeholder="150" class="w-full rounded-md border-slate-300 border p-2 text-sm">
                         </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Remark / Process Observations</label>
+                        <input type="text" id="entry-remark" placeholder="Record issues, observations, anomalies, or special notes..." class="w-full rounded-md border-slate-300 border p-2 text-sm">
                     </div>
                 </div>
 
@@ -316,6 +320,7 @@
                             <th colspan="6" class="p-2 border-r bg-slate-200">Chemical Input</th>
                             <th colspan="6" class="p-2 border-r bg-slate-100">Process Parameter</th>
                             <th colspan="4" class="p-2 border-r bg-brand-100 text-brand-900">Output Volume (L)</th>
+                            <th rowspan="2" class="p-2 border-r">Remark</th>
                             <th rowspan="2" class="p-2 border-r">Operator</th>
                             <th rowspan="2" class="p-2 no-print">Actions</th>
                         </tr>
@@ -380,7 +385,7 @@ function calculateDuration() {
         let endInMinutes = endHours * 60 + endMinutes;
 
         if (endInMinutes < startInMinutes) {
-            endInMinutes += 24 * 60; // Handles overnight process runs
+            endInMinutes += 24 * 60;
         }
 
         const diffMinutes = endInMinutes - startInMinutes;
@@ -529,6 +534,7 @@ async function handleFormSubmit(e) {
         temp_c: parseFloat(document.getElementById('entry-temp').value) || null,
         pressure_bar: parseFloat(document.getElementById('entry-pressure').value) || null,
         agitator_rpm: parseFloat(document.getElementById('entry-agitator').value) || null,
+        remark: document.getElementById('entry-remark').value.trim(),
         supernatant_vol_l: parseFloat(document.getElementById('entry-supernatant').value) || null,
         precipitated_vol_l: parseFloat(document.getElementById('entry-precipitated').value) || null,
         evap_water_recovered_l: parseFloat(document.getElementById('entry-evap-water').value) || null,
@@ -581,12 +587,13 @@ function editEntry(id) {
     document.getElementById('entry-temp').value = item.temp_c || '';
     document.getElementById('entry-pressure').value = item.pressure_bar || '';
     document.getElementById('entry-agitator').value = item.agitator_rpm || '';
+    document.getElementById('entry-remark').value = item.remark || '';
     document.getElementById('entry-supernatant').value = item.supernatant_vol_l || '';
     document.getElementById('entry-precipitated').value = item.precipitated_vol_l || '';
     document.getElementById('entry-evap-water').value = item.evap_water_recovered_l || '';
     document.getElementById('entry-final-product').value = item.output_qty || '';
 
-    calculateDuration(); // Trigger calculation for loaded edit values
+    calculateDuration();
 
     document.getElementById('form-title').textContent = 'Edit Batch #' + (item.batch_no || item.id);
     document.getElementById('cancel-edit-btn').classList.remove('hidden');
@@ -654,6 +661,7 @@ function renderData() {
             <td class="p-2 border-r">${item.precipitated_vol_l ? item.precipitated_vol_l + ' L' : '-'}</td>
             <td class="p-2 border-r text-blue-600 font-semibold">${item.evap_water_recovered_l ? item.evap_water_recovered_l + ' L' : '-'}</td>
             <td class="p-2 border-r font-bold text-brand-700">${item.output_qty ? item.output_qty + ' L' : '-'}</td>
+            <td class="p-2 border-r text-left max-w-xs truncate" title="${escapeHTML(item.remark || '')}">${escapeHTML(item.remark || '-')}</td>
             <td class="p-2 border-r">${escapeHTML(item.operator_name || '-')}</td>
             <td class="p-2 no-print whitespace-nowrap">
                 <button onclick="editEntry(${Number(item.id)})" class="text-blue-600 hover:text-blue-800 font-medium mr-2">Edit</button>
@@ -671,8 +679,8 @@ function renderData() {
 
 function exportCSV() {
     if (logs.length === 0) return alert('No log data available.');
-    const headers = ['Batch No.', 'Type of Waste', 'Amount (kg)', 'Process', 'Sub Process', 'Date', 'KOH (kg)', 'H3PO4 (L)', 'H2O (L)', 'NaOH (kg)', 'Formic Acid (L)', 'Other Chem', 'Start Time', 'End Time', 'Duration', 'Temp (C)', 'Pressure (bar)', 'Agitator (rpm)', 'Supernatant (L)', 'Precipitated (L)', 'Evap Water Recovered (L)', 'Final Product (L)', 'Operator'];
-    const rows = logs.map(i => [i.batch_no, i.waste_type, i.input_qty, i.process_name, i.sub_process, i.log_date, i.koh_kg, i.h3po4_l, i.h2o_l, i.naoh_kg, i.formic_acid_l, i.other_chem, i.start_time, i.end_time, i.duration_hr, i.temp_c, i.pressure_bar, i.agitator_rpm, i.supernatant_vol_l, i.precipitated_vol_l, i.evap_water_recovered_l, i.output_qty, i.operator_name]);
+    const headers = ['Batch No.', 'Type of Waste', 'Amount (kg)', 'Process', 'Sub Process', 'Date', 'KOH (kg)', 'H3PO4 (L)', 'H2O (L)', 'NaOH (kg)', 'Formic Acid (L)', 'Other Chem', 'Start Time', 'End Time', 'Duration', 'Temp (C)', 'Pressure (bar)', 'Agitator (rpm)', 'Supernatant (L)', 'Precipitated (L)', 'Evap Water Recovered (L)', 'Final Product (L)', 'Remark', 'Operator'];
+    const rows = logs.map(i => [i.batch_no, i.waste_type, i.input_qty, i.process_name, i.sub_process, i.log_date, i.koh_kg, i.h3po4_l, i.h2o_l, i.naoh_kg, i.formic_acid_l, i.other_chem, i.start_time, i.end_time, i.duration_hr, i.temp_c, i.pressure_bar, i.agitator_rpm, i.supernatant_vol_l, i.precipitated_vol_l, i.evap_water_recovered_l, i.output_qty, i.remark, i.operator_name]);
     const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v||''}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
