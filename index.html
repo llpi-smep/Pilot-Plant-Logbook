@@ -125,8 +125,7 @@
     <div class="hidden print-only p-8 text-center border-b-2 border-black mb-6">
         <h2 class="text-xl font-bold uppercase">Manufacturing Industry Development Institute</h2>
         <h3 class="text-md font-semibold">Leather and Leather Products Industry Research and Development Center</h3>
-        <h4 class="text-sm font-medium">Pilot Solid Waste Utilization Plant — Daily Process Logbook</h4>
-        <p class="text-xs mt-2 text-gray-600" id="print-date-range">Generated Report</p>
+        <h4 class="text-sm font-medium">Pilot Solid Waste Utilization Plant — Technical Framework Logbook</h4>
     </div>
 
     <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
@@ -141,49 +140,80 @@
                 <dd id="kpi-input" class="mt-1 text-3xl font-semibold text-slate-900">0 <span class="text-sm font-normal text-slate-500">kg</span></dd>
             </div>
             <div class="bg-white shadow-sm rounded-lg border border-slate-200 p-5">
-                <dt class="text-sm font-medium text-slate-500 truncate">Total Product Collected</dt>
-                <dd id="kpi-output" class="mt-1 text-3xl font-semibold text-brand-700">0 <span class="text-sm font-normal text-slate-500">L</span></dd>
+                <dt class="text-sm font-medium text-slate-500 truncate">Evap Water Recovered</dt>
+                <dd id="kpi-water" class="mt-1 text-3xl font-semibold text-blue-600">0 <span class="text-sm font-normal text-slate-500">L</span></dd>
             </div>
             <div class="bg-white shadow-sm rounded-lg border border-slate-200 p-5">
-                <dt class="text-sm font-medium text-slate-500 truncate">Water Recovered</dt>
-                <dd id="kpi-water" class="mt-1 text-3xl font-semibold text-blue-600">0 <span class="text-sm font-normal text-slate-500">L</span></dd>
+                <dt class="text-sm font-medium text-slate-500 truncate">Final Product Output</dt>
+                <dd id="kpi-output" class="mt-1 text-3xl font-semibold text-brand-700">0 <span class="text-sm font-normal text-slate-500">L</span></dd>
             </div>
         </section>
 
         <!-- TECHNICAL ENTRY FORM -->
         <section id="entry-form-section" class="bg-white shadow-sm rounded-lg border border-slate-200 p-6 no-print">
             <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
-                <h2 class="text-lg font-bold text-slate-900" id="form-title">New Process Batch Log Entry</h2>
+                <h2 class="text-lg font-bold text-slate-900" id="form-title">New Technical Framework Batch Log Entry</h2>
                 <button id="cancel-edit-btn" onclick="resetForm()" class="hidden text-sm text-slate-500 hover:text-slate-800 underline">Cancel Edit</button>
             </div>
 
             <form id="log-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
                 <input type="hidden" id="entry-id">
 
-                <!-- ROW 1: Basic Info & Waste Input -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- ROW 1: Batch & Raw Material Info -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Batch No. *</label>
+                        <input type="text" id="entry-batch-no" placeholder="e.g. B-2026-01" required class="w-full rounded-md border-slate-300 border p-2 text-sm focus:ring-brand-600">
+                    </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Date *</label>
-                        <input type="date" id="entry-date" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm focus:ring-brand-600">
+                        <input type="date" id="entry-date" required class="w-full rounded-md border-slate-300 border p-2 text-sm focus:ring-brand-600">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Waste Type *</label>
-                        <input type="text" id="entry-waste-type" placeholder="e.g. Hair, MIX wesh hair" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Type of Waste *</label>
+                        <input type="text" id="entry-waste-type" placeholder="e.g. Hair, MIX wesh hair" required class="w-full rounded-md border-slate-300 border p-2 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Waste Amount (kg) *</label>
-                        <input type="number" step="0.01" min="0" id="entry-input-qty" placeholder="0.00" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Amount (kg) *</label>
+                        <input type="number" step="0.01" min="0" id="entry-input-qty" placeholder="0.00" required class="w-full rounded-md border-slate-300 border p-2 text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Operator Name *</label>
-                        <input type="text" id="entry-operator" placeholder="Operator name" required class="w-full rounded-md border-slate-300 shadow-sm border p-2 text-sm">
+                        <input type="text" id="entry-operator" placeholder="Operator name" required class="w-full rounded-md border-slate-300 border p-2 text-sm">
                     </div>
                 </div>
 
-                <!-- ROW 2: Reagents (Input Chemicals) -->
+                <!-- ROW 2: Process & Sub-Process Selection -->
+                <div class="bg-slate-50 p-4 rounded-md border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Process Stage *</label>
+                        <select id="entry-process" required class="w-full rounded-md border-slate-300 border p-2 text-sm bg-white">
+                            <option value="">-- Select Process --</option>
+                            <option value="Hydrolysis RXN">Hydrolysis RXN</option>
+                            <option value="Precipitation">Precipitation</option>
+                            <option value="Neutralization">Neutralization</option>
+                            <option value="Evaporation">Evaporation</option>
+                            <option value="Cooling">Cooling</option>
+                            <option value="collection">Collection</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Sub Process</label>
+                        <select id="entry-sub-process" class="w-full rounded-md border-slate-300 border p-2 text-sm bg-white">
+                            <option value="">-- Select Sub Process (Optional) --</option>
+                            <option value="pre-heating">pre-heating</option>
+                            <option value="main reaction">main reaction</option>
+                            <option value="main evaporation">main evaporation</option>
+                            <option value="other">Other / Custom</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ROW 3: Chemical Inputs -->
                 <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
-                    <span class="block text-xs font-bold text-slate-700 uppercase mb-2">Chemical Inputs (Reagents)</span>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <span class="block text-xs font-bold text-slate-700 uppercase mb-2">Chemical Input (Reagents)</span>
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">KOH (kg)</label>
                             <input type="number" step="0.01" min="0" id="entry-koh" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
@@ -196,55 +226,71 @@
                             <label class="block text-xs font-medium text-slate-600 mb-1">H₂O (L)</label>
                             <input type="number" step="0.01" min="0" id="entry-h2o" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
                         </div>
-                    </div>
-                </div>
-
-                <!-- ROW 3: Processes Checkboxes & Conditions -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
-                        <span class="block text-xs font-bold text-slate-700 uppercase mb-2">Process Stages</span>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <label class="flex items-center"><input type="checkbox" id="proc-preheat" class="rounded text-brand-700 mr-2"> Pre-heat</label>
-                            <label class="flex items-center"><input type="checkbox" id="proc-rxn" class="rounded text-brand-700 mr-2"> Rxn (Reaction)</label>
-                            <label class="flex items-center"><input type="checkbox" id="proc-reactor" class="rounded text-brand-700 mr-2"> Reactor</label>
-                            <label class="flex items-center"><input type="checkbox" id="proc-pp-tanker" class="rounded text-brand-700 mr-2"> PP. Tanker</label>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">NaOH (kg)</label>
+                            <input type="number" step="0.01" min="0" id="entry-naoh" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
                         </div>
-                    </div>
-
-                    <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
-                        <span class="block text-xs font-bold text-slate-700 uppercase mb-2">Operating Parameters</span>
-                        <div class="grid grid-cols-3 gap-2">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-600 mb-1">Duration / Time</label>
-                                <input type="text" id="entry-duration" placeholder="e.g. 2hr30min" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-600 mb-1">Temp (°C)</label>
-                                <input type="number" step="0.1" id="entry-temp" placeholder="120" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-600 mb-1">Pressure (bar)</label>
-                                <input type="number" step="0.1" id="entry-pressure" placeholder="2.5" class="w-full rounded-md border-slate-300 border p-1.5 text-sm">
-                            </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Formic Acid (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-formic-acid" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Other Chem.</label>
+                            <input type="text" id="entry-other-chem" placeholder="Specify name/qty" class="w-full rounded-md border-slate-300 border p-2 text-sm">
                         </div>
                     </div>
                 </div>
 
-                <!-- ROW 4: Outputs -->
+                <!-- ROW 4: Process Parameters -->
+                <div class="bg-slate-50 p-4 rounded-md border border-slate-200">
+                    <span class="block text-xs font-bold text-slate-700 uppercase mb-2">Process Parameters</span>
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Start Time</label>
+                            <input type="text" id="entry-start-time" placeholder="e.g. 08:30 AM" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">End Time</label>
+                            <input type="text" id="entry-end-time" placeholder="e.g. 11:00 AM" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Duration</label>
+                            <input type="text" id="entry-duration" placeholder="e.g. 2hr 30min" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Temp (°C)</label>
+                            <input type="number" step="0.1" id="entry-temp" placeholder="120" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Pressure (bar)</label>
+                            <input type="number" step="0.1" id="entry-pressure" placeholder="2.5" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Agitator (rpm)</label>
+                            <input type="number" step="1" id="entry-agitator" placeholder="150" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW 5: Output Volumes -->
                 <div class="bg-brand-50 p-4 rounded-md border border-brand-100">
-                    <span class="block text-xs font-bold text-brand-900 uppercase mb-2">Product Outputs & Recovery</span>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <span class="block text-xs font-bold text-brand-900 uppercase mb-2">Output Volume (L)</span>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Output Vol. (L)</label>
-                            <input type="number" step="0.01" min="0" id="entry-output-vol" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Supernatant Vol. (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-supernatant" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Recovered Water (L)</label>
-                            <input type="number" step="0.01" min="0" id="entry-recovered-water" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Precipitated Vol. (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-precipitated" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-brand-900 mb-1">Final Product Collected (L)</label>
-                            <input type="number" step="0.01" min="0" id="entry-final-product" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm font-semibold">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Recovered Water from Evap. (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-evap-water" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-brand-900 mb-1">Final Product Output (L)</label>
+                            <input type="number" step="0.01" min="0" id="entry-final-product" placeholder="0.00" class="w-full rounded-md border-slate-300 border p-2 text-sm font-bold text-brand-800">
                         </div>
                     </div>
                 </div>
@@ -255,34 +301,41 @@
             </form>
         </section>
 
-        <!-- TABLE -->
+        <!-- TABLE MATCHING EXCEL FRAMEWORK -->
         <section class="bg-white shadow-sm rounded-lg border border-slate-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
                         <tr class="bg-slate-100 border-b border-slate-300 text-slate-800 text-center font-bold">
-                            <th rowspan="2" class="p-2 border-r">Date</th>
-                            <th rowspan="2" class="p-2 border-r">Waste Type</th>
+                            <th rowspan="2" class="p-2 border-r">Batch No.</th>
+                            <th rowspan="2" class="p-2 border-r">Type of Waste</th>
                             <th rowspan="2" class="p-2 border-r">Amount (kg)</th>
-                            <th colspan="3" class="p-2 border-r bg-slate-200">Input Reagents</th>
-                            <th colspan="4" class="p-2 border-r bg-slate-100">Processes</th>
-                            <th rowspan="2" class="p-2 border-r">Duration</th>
-                            <th rowspan="2" class="p-2 border-r">Temp. (°C)</th>
-                            <th rowspan="2" class="p-2 border-r">Pressure (bar)</th>
-                            <th rowspan="2" class="p-2 border-r">Output Vol (L)</th>
-                            <th rowspan="2" class="p-2 border-r">Recover Water (L)</th>
-                            <th rowspan="2" class="p-2 border-r">Final Product (L)</th>
+                            <th rowspan="2" class="p-2 border-r">Process</th>
+                            <th rowspan="2" class="p-2 border-r">Sub Process</th>
+                            <th rowspan="2" class="p-2 border-r">Date</th>
+                            <th colspan="6" class="p-2 border-r bg-slate-200">Chemical Input</th>
+                            <th colspan="6" class="p-2 border-r bg-slate-100">Process Parameter</th>
+                            <th colspan="4" class="p-2 border-r bg-brand-100 text-brand-900">Output Volume (L)</th>
                             <th rowspan="2" class="p-2 border-r">Operator</th>
                             <th rowspan="2" class="p-2 no-print">Actions</th>
                         </tr>
                         <tr class="bg-slate-50 border-b border-slate-300 text-slate-700 text-center font-semibold">
-                            <th class="p-1 border-r">KOH (kg)</th>
+                            <th class="p-1 border-r">KOH (Kg)</th>
                             <th class="p-1 border-r">H₃PO₄ (L)</th>
                             <th class="p-1 border-r">H₂O (L)</th>
-                            <th class="p-1 border-r">Pre-heat</th>
-                            <th class="p-1 border-r">Rxn</th>
-                            <th class="p-1 border-r">Reactor</th>
-                            <th class="p-1 border-r">PP. Tanker</th>
+                            <th class="p-1 border-r">NaOH (Kg)</th>
+                            <th class="p-1 border-r">Formic Acid (L)</th>
+                            <th class="p-1 border-r">Other</th>
+                            <th class="p-1 border-r">Start Time</th>
+                            <th class="p-1 border-r">End Time</th>
+                            <th class="p-1 border-r">Duration</th>
+                            <th class="p-1 border-r">Temp (°C)</th>
+                            <th class="p-1 border-r">Pressure (bar)</th>
+                            <th class="p-1 border-r">Agitator (rpm)</th>
+                            <th class="p-1 border-r">Supernatant (L)</th>
+                            <th class="p-1 border-r">Precipitated (L)</th>
+                            <th class="p-1 border-r">Recovered Water Evap (L)</th>
+                            <th class="p-1 border-r font-bold text-brand-900">Final Product (L)</th>
                         </tr>
                     </thead>
                     <tbody id="log-table-body" class="divide-y divide-slate-200 text-center"></tbody>
@@ -294,7 +347,7 @@
         <div id="loading-message" class="hidden fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg shadow-xl p-6 flex items-center gap-4">
                 <div class="loading-spinner"></div>
-                <span class="text-sm font-medium text-slate-700">Loading process logs...</span>
+                <span class="text-sm font-medium text-slate-700">Loading framework logs...</span>
             </div>
         </div>
     </main>
@@ -427,24 +480,30 @@ async function handleFormSubmit(e) {
 
     const id = document.getElementById('entry-id').value.trim();
     const entryData = {
+        batch_no: document.getElementById('entry-batch-no').value.trim(),
         log_date: document.getElementById('entry-date').value,
         waste_type: document.getElementById('entry-waste-type').value.trim(),
         input_qty: parseFloat(document.getElementById('entry-input-qty').value) || 0,
         operator_name: document.getElementById('entry-operator').value.trim(),
+        process_name: document.getElementById('entry-process').value,
+        sub_process: document.getElementById('entry-sub-process').value,
         koh_kg: parseFloat(document.getElementById('entry-koh').value) || null,
         h3po4_l: parseFloat(document.getElementById('entry-h3po4').value) || null,
         h2o_l: parseFloat(document.getElementById('entry-h2o').value) || null,
-        process_preheat: document.getElementById('proc-preheat').checked,
-        process_rxn: document.getElementById('proc-rxn').checked,
-        process_reactor: document.getElementById('proc-reactor').checked,
-        process_pp_tanker: document.getElementById('proc-pp-tanker').checked,
+        naoh_kg: parseFloat(document.getElementById('entry-naoh').value) || null,
+        formic_acid_l: parseFloat(document.getElementById('entry-formic-acid').value) || null,
+        other_chem: document.getElementById('entry-other-chem').value.trim(),
+        start_time: document.getElementById('entry-start-time').value.trim(),
+        end_time: document.getElementById('entry-end-time').value.trim(),
         duration_hr: document.getElementById('entry-duration').value.trim(),
         temp_c: parseFloat(document.getElementById('entry-temp').value) || null,
         pressure_bar: parseFloat(document.getElementById('entry-pressure').value) || null,
-        output_vol_l: parseFloat(document.getElementById('entry-output-vol').value) || null,
-        recovered_water_l: parseFloat(document.getElementById('entry-recovered-water').value) || null,
+        agitator_rpm: parseFloat(document.getElementById('entry-agitator').value) || null,
+        supernatant_vol_l: parseFloat(document.getElementById('entry-supernatant').value) || null,
+        precipitated_vol_l: parseFloat(document.getElementById('entry-precipitated').value) || null,
+        evap_water_recovered_l: parseFloat(document.getElementById('entry-evap-water').value) || null,
         output_qty: parseFloat(document.getElementById('entry-final-product').value) || null,
-        activity: 'Reaction / Processing'
+        activity: 'Technical Framework Batch'
     };
 
     const submitBtn = document.getElementById('submit-btn');
@@ -473,25 +532,31 @@ function editEntry(id) {
     if (!item) return;
 
     document.getElementById('entry-id').value = item.id;
-    document.getElementById('entry-date').value = item.log_date;
+    document.getElementById('entry-batch-no').value = item.batch_no || '';
+    document.getElementById('entry-date').value = item.log_date || '';
     document.getElementById('entry-waste-type').value = item.waste_type || '';
     document.getElementById('entry-input-qty').value = item.input_qty || '';
     document.getElementById('entry-operator').value = item.operator_name || '';
+    document.getElementById('entry-process').value = item.process_name || '';
+    document.getElementById('entry-sub-process').value = item.sub_process || '';
     document.getElementById('entry-koh').value = item.koh_kg || '';
     document.getElementById('entry-h3po4').value = item.h3po4_l || '';
     document.getElementById('entry-h2o').value = item.h2o_l || '';
-    document.getElementById('proc-preheat').checked = !!item.process_preheat;
-    document.getElementById('proc-rxn').checked = !!item.process_rxn;
-    document.getElementById('proc-reactor').checked = !!item.process_reactor;
-    document.getElementById('proc-pp-tanker').checked = !!item.process_pp_tanker;
+    document.getElementById('entry-naoh').value = item.naoh_kg || '';
+    document.getElementById('entry-formic-acid').value = item.formic_acid_l || '';
+    document.getElementById('entry-other-chem').value = item.other_chem || '';
+    document.getElementById('entry-start-time').value = item.start_time || '';
+    document.getElementById('entry-end-time').value = item.end_time || '';
     document.getElementById('entry-duration').value = item.duration_hr || '';
     document.getElementById('entry-temp').value = item.temp_c || '';
     document.getElementById('entry-pressure').value = item.pressure_bar || '';
-    document.getElementById('entry-output-vol').value = item.output_vol_l || '';
-    document.getElementById('entry-recovered-water').value = item.recovered_water_l || '';
+    document.getElementById('entry-agitator').value = item.agitator_rpm || '';
+    document.getElementById('entry-supernatant').value = item.supernatant_vol_l || '';
+    document.getElementById('entry-precipitated').value = item.precipitated_vol_l || '';
+    document.getElementById('entry-evap-water').value = item.evap_water_recovered_l || '';
     document.getElementById('entry-final-product').value = item.output_qty || '';
 
-    document.getElementById('form-title').textContent = 'Edit Process Batch #' + item.id;
+    document.getElementById('form-title').textContent = 'Edit Batch #' + (item.batch_no || item.id);
     document.getElementById('cancel-edit-btn').classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -515,7 +580,7 @@ function resetForm() {
     document.getElementById('entry-id').value = '';
     document.getElementById('entry-date').value = todayLocal();
     if (currentProfile) document.getElementById('entry-operator').value = currentProfile.full_name || currentUser.email;
-    document.getElementById('form-title').textContent = 'New Process Batch Log Entry';
+    document.getElementById('form-title').textContent = 'New Technical Framework Batch Log Entry';
     document.getElementById('cancel-edit-btn').classList.add('hidden');
 }
 
@@ -523,34 +588,38 @@ function renderData() {
     const tbody = document.getElementById('log-table-body');
     tbody.innerHTML = '';
 
-    let totalInput = 0, totalOutput = 0, totalWater = 0;
+    let totalInput = 0, totalOutput = 0, totalEvapWater = 0;
 
-    logs.forEach((item, index) => {
+    logs.forEach((item) => {
         totalInput += Number(item.input_qty) || 0;
         totalOutput += Number(item.output_qty) || 0;
-        totalWater += Number(item.recovered_water_l) || 0;
+        totalEvapWater += Number(item.evap_water_recovered_l) || 0;
 
         const row = document.createElement('tr');
         row.className = 'hover:bg-slate-50';
 
-        const checkMark = (val) => val ? '<span class="text-green-600 font-bold">✓</span>' : '-';
-
         row.innerHTML = `
-            <td class="p-2 border-r whitespace-nowrap">${escapeHTML(item.log_date)}</td>
+            <td class="p-2 border-r font-semibold whitespace-nowrap">${escapeHTML(item.batch_no || '-')}</td>
             <td class="p-2 border-r font-medium">${escapeHTML(item.waste_type || '-')}</td>
             <td class="p-2 border-r">${item.input_qty ? item.input_qty + ' kg' : '-'}</td>
+            <td class="p-2 border-r font-semibold text-slate-800">${escapeHTML(item.process_name || '-')}</td>
+            <td class="p-2 border-r text-slate-600">${escapeHTML(item.sub_process || '-')}</td>
+            <td class="p-2 border-r whitespace-nowrap">${escapeHTML(item.log_date || '-')}</td>
             <td class="p-2 border-r">${item.koh_kg ? item.koh_kg + ' kg' : '-'}</td>
             <td class="p-2 border-r">${item.h3po4_l ? item.h3po4_l + ' L' : '-'}</td>
             <td class="p-2 border-r">${item.h2o_l ? item.h2o_l + ' L' : '-'}</td>
-            <td class="p-2 border-r">${checkMark(item.process_preheat)}</td>
-            <td class="p-2 border-r">${checkMark(item.process_rxn)}</td>
-            <td class="p-2 border-r">${checkMark(item.process_reactor)}</td>
-            <td class="p-2 border-r">${checkMark(item.process_pp_tanker)}</td>
+            <td class="p-2 border-r">${item.naoh_kg ? item.naoh_kg + ' kg' : '-'}</td>
+            <td class="p-2 border-r">${item.formic_acid_l ? item.formic_acid_l + ' L' : '-'}</td>
+            <td class="p-2 border-r">${escapeHTML(item.other_chem || '-')}</td>
+            <td class="p-2 border-r">${escapeHTML(item.start_time || '-')}</td>
+            <td class="p-2 border-r">${escapeHTML(item.end_time || '-')}</td>
             <td class="p-2 border-r">${escapeHTML(item.duration_hr || '-')}</td>
             <td class="p-2 border-r">${item.temp_c ? item.temp_c + ' °C' : '-'}</td>
             <td class="p-2 border-r">${item.pressure_bar ? item.pressure_bar + ' bar' : '-'}</td>
-            <td class="p-2 border-r">${item.output_vol_l ? item.output_vol_l + ' L' : '-'}</td>
-            <td class="p-2 border-r text-blue-600 font-semibold">${item.recovered_water_l ? item.recovered_water_l + ' L' : '-'}</td>
+            <td class="p-2 border-r">${item.agitator_rpm ? item.agitator_rpm + ' rpm' : '-'}</td>
+            <td class="p-2 border-r">${item.supernatant_vol_l ? item.supernatant_vol_l + ' L' : '-'}</td>
+            <td class="p-2 border-r">${item.precipitated_vol_l ? item.precipitated_vol_l + ' L' : '-'}</td>
+            <td class="p-2 border-r text-blue-600 font-semibold">${item.evap_water_recovered_l ? item.evap_water_recovered_l + ' L' : '-'}</td>
             <td class="p-2 border-r font-bold text-brand-700">${item.output_qty ? item.output_qty + ' L' : '-'}</td>
             <td class="p-2 border-r">${escapeHTML(item.operator_name || '-')}</td>
             <td class="p-2 no-print whitespace-nowrap">
@@ -563,19 +632,19 @@ function renderData() {
 
     document.getElementById('kpi-batches').textContent = logs.length;
     document.getElementById('kpi-input').innerHTML = totalInput.toFixed(1) + ' <span class="text-sm font-normal text-slate-500">kg</span>';
+    document.getElementById('kpi-water').innerHTML = totalEvapWater.toFixed(1) + ' <span class="text-sm font-normal text-slate-500">L</span>';
     document.getElementById('kpi-output').innerHTML = totalOutput.toFixed(1) + ' <span class="text-sm font-normal text-slate-500">L</span>';
-    document.getElementById('kpi-water').innerHTML = totalWater.toFixed(1) + ' <span class="text-sm font-normal text-slate-500">L</span>';
 }
 
 function exportCSV() {
     if (logs.length === 0) return alert('No log data available.');
-    const headers = ['Date', 'Waste Type', 'Amount (kg)', 'KOH (kg)', 'H3PO4 (L)', 'H2O (L)', 'Pre-heat', 'Rxn', 'Reactor', 'PP Tanker', 'Duration', 'Temp (C)', 'Pressure (bar)', 'Output Vol (L)', 'Recovered Water (L)', 'Final Product (L)', 'Operator'];
-    const rows = logs.map(i => [i.log_date, i.waste_type, i.input_qty, i.koh_kg, i.h3po4_l, i.h2o_l, i.process_preheat?'Yes':'No', i.process_rxn?'Yes':'No', i.process_reactor?'Yes':'No', i.process_pp_tanker?'Yes':'No', i.duration_hr, i.temp_c, i.pressure_bar, i.output_vol_l, i.recovered_water_l, i.output_qty, i.operator_name]);
+    const headers = ['Batch No.', 'Type of Waste', 'Amount (kg)', 'Process', 'Sub Process', 'Date', 'KOH (kg)', 'H3PO4 (L)', 'H2O (L)', 'NaOH (kg)', 'Formic Acid (L)', 'Other Chem', 'Start Time', 'End Time', 'Duration', 'Temp (C)', 'Pressure (bar)', 'Agitator (rpm)', 'Supernatant (L)', 'Precipitated (L)', 'Evap Water Recovered (L)', 'Final Product (L)', 'Operator'];
+    const rows = logs.map(i => [i.batch_no, i.waste_type, i.input_qty, i.process_name, i.sub_process, i.log_date, i.koh_kg, i.h3po4_l, i.h2o_l, i.naoh_kg, i.formic_acid_l, i.other_chem, i.start_time, i.end_time, i.duration_hr, i.temp_c, i.pressure_bar, i.agitator_rpm, i.supernatant_vol_l, i.precipitated_vol_l, i.evap_water_recovered_l, i.output_qty, i.operator_name]);
     const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v||''}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'Pilot_Plant_Process_Logbook_' + todayLocal() + '.csv';
+    link.download = 'Pilot_Plant_Framework_Logbook_' + todayLocal() + '.csv';
     link.click();
 }
 
